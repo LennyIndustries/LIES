@@ -25,4 +25,4 @@ Remove the disclaimer above once filled in with correct information.<br/>
 ---
 ### Fancy labels
 Edit link and remove this text and header.<br/>
-![N|Solid](https://img.shields.io/github/last-commit/LennyIndustries/ProjectName) ![N|Solid](https://img.shields.io/github/repo-size/LennyIndustries/ProjectName) ![N|Solid](https://img.shields.io/tokei/lines/github/LennyIndustries/ProjectName) ![N|Solid](https://img.shields.io/github/issues/LennyIndustries/ProjectName) ![N|Solid](https://img.shields.io/github/issues-pr/LennyIndustries/ProjectName)
+![N|Solid](https://img.shields.io/github/last-commit/LennyIndustries/LIES) ![N|Solid](https://img.shields.io/github/repo-size/LennyIndustries/LIES) ![N|Solid](https://img.shields.io/tokei/lines/github/LennyIndustries/LIES) ![N|Solid](https://img.shields.io/github/issues/LennyIndustries/LIES) ![N|Solid](https://img.shields.io/github/issues-pr/LennyIndustries/LIES)
