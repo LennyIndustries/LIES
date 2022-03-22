@@ -1,19 +1,17 @@
 # Ideas
 Encryption service: Send an image (and text) file to the server, get the image back with the text encrypted into the image or a text file with the text from the image. With basic encryption options: Cesar encryption, ...<br/>
-Game service: play some basic co-op games, battleships, blackjack (free to join and leave, 1 up to x players), checkers, ... With included chat?<br/>
-Sensor logging service: send sensor data to the server and lookup any sensor data from any other sensor that logs to the server (CLI). Extra website to view the data?<br/>
-Chat service: room based chat service. Freely create rooms with or without password and have others join. Global room listing? End to end based encryption?<br/>
 <br/>***>>Text below is boilerplate, ignore for now.<<***<br/>
-# Project Name (Boilerplate)
-Project description.
+# LIES
+Lenny Industries Encryption Service
 ## What does it do?
-Don't know yet.
+Send files to the server and receive encrypted text or images.
 ## How does it work?
-How would I know?
+TBD
 ## How to use?
-Most likely you don't. For now.
+Over benternet using commands.
+TBD
 ## How to compile?
-You don't, there is nothing here to compile.
+TBD
 ## Sources
 Example:<br/>
 Source description: [Source here with link to source](https://www.youtube.com/watch?v=dQw4w9WgXcQ)<br/>
