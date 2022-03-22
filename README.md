@@ -8,7 +8,7 @@ Send files to the server and receive encrypted text or images.
 ## How does it work?
 TBD
 ## How to use?
-Over benternet using commands.
+Over benternet using commands.<br/>
 TBD
 ## How to compile?
 TBD
