@@ -10,12 +10,14 @@ include_directories(
 		External/ZMQ/include/
 		External/OpenSSL/include/
 		External/Botal/include/
+		External/QT/include/
 )
 
 link_directories(
 		External/ZMQ/lib/
 		External/OpenSSL/lib/
 		External/Botal/lib/
+		External/QT/lib/
 )
 
 set(ALL_LIBS
@@ -26,6 +28,7 @@ set(ALL_LIBS
 		libcrypto.a
 		libssl.a
 		libbotan-2.a
+		libQt6Core.a
 		)
 
 # Project Stuff
