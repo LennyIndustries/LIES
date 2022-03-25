@@ -8,10 +8,14 @@ add_compile_definitions(ZMQ_STATIC)
 include_directories(
 		Sources/
 		External/ZMQ/include/
+		External/OpenSSL/include/
+		External/Botal/include/
 )
 
 link_directories(
 		External/ZMQ/lib/
+		External/OpenSSL/lib/
+		External/Botal/lib/
 )
 
 set(ALL_LIBS
@@ -19,6 +23,9 @@ set(ALL_LIBS
 		libzmq.a
 		ws2_32
 		iphlpapi
+		libcrypto.a
+		libssl.a
+		libbotan-2.a
 		)
 
 # Project Stuff
@@ -27,11 +34,13 @@ project(main)
 
 set(project_headers
 		#Sources/*.hpp
+		Sources/lilog.hpp
 		)
 
 set(project_sources
 		#Sources/*.cpp
 		Sources/${PROJECT_NAME}.cpp
+		Sources/lilog.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})
