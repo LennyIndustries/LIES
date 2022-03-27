@@ -1,11 +1,11 @@
 /*
- * Created by Leander @ Lenny Industries on 18/03/2022.
+ * Created by Leander @ Lenny Industries on 25/03/2022.
  * Project: LIES.
  * Copyright (c) 2022 Lenny Industries. All rights reserved.
  */
 
 // Libraries
-#include "lilog.hpp"
+#include "include/lilog.hpp"
 #include <cstdio>
 #include <openssl/opensslv.h>
 #include <openssl/evp.h>
@@ -23,13 +23,15 @@
 
 int main(int argc, char **argv)
 {
-	printf("Hello World\n");
+	printf("Hello World\nClient\n");
 	
 	printf("OpenSSL Version: %i\n", OPENSSL_VERSION_NUMBER);
 	
 	printf("Botan Version: %i\n", BOTAN_VERSION_CODE);
+
+//	printf("QT Version: %i\n", QT_VERSION);
 	
-//	printf("QT Version: %i-%i-%i\n", QT_VERSION);
+	lilog::sayHello();
 	
 	return ERR_0;
 }

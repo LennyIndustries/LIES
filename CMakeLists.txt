@@ -32,18 +32,41 @@ set(ALL_LIBS
 		)
 
 # Project Stuff
-# Project 1
-project(main)
+# Project 1 - Server
+project(server)
 
 set(project_headers
 		#Sources/*.hpp
-		Sources/lilog.hpp
+		Sources/include/lilog.hpp
 		)
 
 set(project_sources
 		#Sources/*.cpp
 		Sources/${PROJECT_NAME}.cpp
-		Sources/lilog.cpp
+		Sources/lib/lilog.cpp
+		)
+
+message("PROJECT_NAME=" ${PROJECT_NAME})
+message("PROJECT_SOURCES=" ${project_sources})
+message("PROJECT_HEADERS=" ${project_headers})
+message("PROJECT_LIBS=" ${ALL_LIBS})
+
+add_executable(${PROJECT_NAME} ${project_sources} ${project_headers})
+
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+
+# Project 2 - Client
+project(client)
+
+set(project_headers
+		#Sources/*.hpp
+		Sources/include/lilog.hpp
+		)
+
+set(project_sources
+		#Sources/*.cpp
+		Sources/${PROJECT_NAME}.cpp
+		Sources/lib/lilog.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})
