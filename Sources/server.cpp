@@ -12,7 +12,7 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <botan/botan.h>
-//#include <QtCore/qglobal.h>
+#include <QtCore/qglobal.h>
 
 // Definitions
 
@@ -29,13 +29,10 @@ int main(int argc, char **argv)
 	
 	printf("Botan Version: %i\n", BOTAN_VERSION_CODE);
 
-//	printf("QT Version: %i\n", QT_VERSION);
+	printf("QT Version: %i\n", QT_VERSION);
 	
-	char *logFileName = nullptr;
-	strcpy(logFileName, "test.log");
-	lilog myLog(logFileName);
-	
-	lilog::sayHello();
+	printf("Log testing\n");
+	lilog myLog("test.log");
 	
 	myLog.clearLogFile();
 	
@@ -44,6 +41,11 @@ int main(int argc, char **argv)
 	LOG(myLog, 2, "Test %i", 2);
 	LOG(myLog, 3, "Test %i", 3);
 	LOG(myLog, 4, "Test %i", 4);
+	
+	while (true) {};
+	
+//	myLog.close();
+//	myLog.kill();
 	
 	return ERR_0;
 }

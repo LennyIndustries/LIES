@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 # ZMQ Stuff
 add_compile_definitions(ZMQ_STATIC)
@@ -9,14 +9,14 @@ include_directories(
 		Sources/
 		External/ZMQ/include/
 		External/OpenSSL/include/
-		External/Botal/include/
+		External/Botan/include/
 		External/QT/include/
 )
 
 link_directories(
 		External/ZMQ/lib/
 		External/OpenSSL/lib/
-		External/Botal/lib/
+		External/Botan/lib/
 		External/QT/lib/
 )
 

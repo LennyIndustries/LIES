@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <string>
 #include <unistd.h>
+#include <utility>
 
 // Definitions
 // Macros
@@ -33,14 +34,15 @@
 class lilog
 {
 public:
-	explicit lilog(char *logFile);
-	static void sayHello();
+	explicit lilog(const std::string &logFile);
 	bool log(char logLevel, std::string file, unsigned int line, const char *message, ...);
 	void clearLogFile();
-	void closeLogFile();
+	void kill();
+	inline void close() { kill(); } // Separate kill and close
+	~lilog();
 protected:
 private:
-	char *logFile;
+	std::string logFile;
 	std::ofstream myStream;
 };
 
