@@ -15,6 +15,22 @@ lilog::lilog(const std::string &logFile)
 		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
 		// Failure = true
 	}
+	else
+	{
+		auto lam = [this](int i)
+		{
+			std::cout << "aborting" << std::endl;
+			myStream.close();
+			exit(0);
+		};
+		
+		//^C
+		signal(SIGINT, lam);
+		//abort()
+		signal(SIGABRT, lam);
+		//sent by "kill" command
+		signal(SIGTERM, lam);
+	}
 }
 
 bool lilog::log(char logLevel, std::string file, unsigned int line, const char *message, ...)
