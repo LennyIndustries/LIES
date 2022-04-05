@@ -4,6 +4,14 @@
  * Copyright (c) 2022 Lenny Industries. All rights reserved.
  */
 
+/*
+ * Bulk of program, get a message over benternet and solves the encryption / decryption.
+ * Later add options to add extra encryption (RSA, ...).
+ * Add checksum to info received over benternet.
+ * Multithreading server, process multiple clients at once.
+ * Possible other stuff.
+ */
+
 // Libraries
 #include "include/lilog.hpp"
 #include <cstdio>
