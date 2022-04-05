@@ -14,16 +14,9 @@
 #define MAIN_LILOG_HPP
 
 // Libraries
-#include <cstdio>
-#include <ctime>
-#include <cstdlib>
 #include <cstdarg>
 #include <iostream>
 #include <fstream>
-#include <filesystem>
-#include <string>
-#include <unistd.h>
-#include <utility>
 
 // Definitions
 // Macros
@@ -38,7 +31,7 @@ public:
 	bool log(char logLevel, std::string file, unsigned int line, const char *message, ...);
 	void clearLogFile();
 	void kill();
-	inline void close() { kill(); } // Separate kill and close
+	void close();
 	~lilog();
 protected:
 private:

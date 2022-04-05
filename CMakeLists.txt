@@ -38,12 +38,14 @@ project(server)
 set(project_headers
 		#Sources/*.hpp
 		Sources/include/lilog.hpp
+		Sources/include/inputHandler.hpp
 		)
 
 set(project_sources
 		#Sources/*.cpp
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
+		Sources/lib/inputHandler.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})
@@ -61,12 +63,14 @@ project(client)
 set(project_headers
 		#Sources/*.hpp
 		Sources/include/lilog.hpp
+		Sources/include/inputHandler.hpp
 		)
 
 set(project_sources
 		#Sources/*.cpp
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
+		Sources/lib/inputHandler.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})

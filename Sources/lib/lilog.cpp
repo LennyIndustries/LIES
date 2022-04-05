@@ -13,24 +13,23 @@ lilog::lilog(const std::string &logFile)
 	if (!myStream.is_open())
 	{
 		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
-		// Failure = true
+		this->kill();
 	}
-	else
-	{
-		auto lam = [this](int i)
-		{
-			std::cout << "aborting" << std::endl;
-			myStream.close();
-			exit(0);
-		};
-		
-		//^C
-		signal(SIGINT, lam);
-		//abort()
-		signal(SIGABRT, lam);
-		//sent by "kill" command
-		signal(SIGTERM, lam);
-	}
+//	else
+//	{
+//		auto lam = [](int i)
+//		{
+//			std::cout << "aborting" << std::endl;
+//			exit(0);
+//		};
+//
+//		//^C
+//		signal(SIGINT, lam);
+//		//abort()
+//		signal(SIGABRT, lam);
+//		//sent by "kill" command
+//		signal(SIGTERM, lam);
+//	}
 }
 
 bool lilog::log(char logLevel, std::string file, unsigned int line, const char *message, ...)
@@ -90,6 +89,12 @@ void lilog::clearLogFile()
 	std::ofstream ofs;
 	ofs.open(logFile, std::ofstream::out | std::ofstream::trunc);
 	ofs.close();
+}
+
+void lilog::close()
+{
+	log(1, __FILE__, __LINE__, "Closing log file (close).");
+	myStream.close();
 }
 
 void lilog::kill()
