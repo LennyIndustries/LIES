@@ -5,7 +5,7 @@
  */
 
 /*
- * lilog
+ * lilog V2
  * Lenny Industries Log
  * Used for logging purposes
  */
@@ -20,21 +20,22 @@
 
 // Definitions
 // Macros
-#define LOG(lilogName, logLevel, message, ...) lilogName.log(logLevel, __FILE__, __LINE__, message, ##__VA_ARGS__)
-
-// Functions
+#define LOG(lilogName, logLevel, message, ...) lilogName->log(logLevel, __FILE__, __LINE__, message, ##__VA_ARGS__)
 
 class lilog
 {
 public:
-	explicit lilog(const std::string &logFile);
+	static lilog *create(const std::string &logFile, bool clear = false);
+	void kill();
 	bool log(char logLevel, std::string file, unsigned int line, const char *message, ...);
 	void clearLogFile();
-	void kill();
+	void open();
 	void close();
-	~lilog();
 protected:
 private:
+	explicit lilog(const std::string &logFile, bool clear);
+	~lilog();
+	
 	std::string logFile;
 	std::ofstream myStream;
 };

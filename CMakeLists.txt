@@ -39,6 +39,9 @@ set(project_headers
 		#Sources/*.hpp
 		Sources/include/lilog.hpp
 		Sources/include/inputHandler.hpp
+		Sources/include/encrypt.cpp
+		Sources/include/decrypt.cpp
+		Sources/include/cryptLib.cpp
 		)
 
 set(project_sources
@@ -46,6 +49,9 @@ set(project_sources
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
 		Sources/lib/inputHandler.cpp
+		Sources/include/encrypt.cpp
+		Sources/include/decrypt.cpp
+		Sources/include/cryptLib.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})
@@ -64,6 +70,9 @@ set(project_headers
 		#Sources/*.hpp
 		Sources/include/lilog.hpp
 		Sources/include/inputHandler.hpp
+		Sources/include/encrypt.cpp
+		Sources/include/decrypt.cpp
+		Sources/include/cryptLib.cpp
 		)
 
 set(project_sources
@@ -71,6 +80,9 @@ set(project_sources
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
 		Sources/lib/inputHandler.cpp
+		Sources/include/encrypt.cpp
+		Sources/include/decrypt.cpp
+		Sources/include/cryptLib.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})

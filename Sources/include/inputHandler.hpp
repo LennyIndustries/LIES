@@ -1,6 +1,6 @@
 /*
  * Created by Leander @ Lenny Industries on 05/04/2022.
- * Project: client.
+ * Project: LIES.
  * Copyright (c) 2022 Lenny Industries. All rights reserved.
  */
 
@@ -16,8 +16,7 @@
 #include <vector>
 #include <algorithm>
 
-// Definition
-// Functions
+// Definitions
 
 class inputHandler
 {

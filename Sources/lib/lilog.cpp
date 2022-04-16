@@ -6,15 +6,12 @@
 
 #include "include/lilog.hpp"
 
-lilog::lilog(const std::string &logFile)
+// Constructor (Private)
+lilog::lilog(const std::string &logFile, bool clear)
 {
 	this->logFile = logFile;
-	myStream.open(logFile);
-	if (!myStream.is_open())
-	{
-		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
-		this->kill();
-	}
+	clear ? this->clearLogFile() : this->open();
+
 //	else
 //	{
 //		auto lam = [](int i)
@@ -32,9 +29,22 @@ lilog::lilog(const std::string &logFile)
 //	}
 }
 
+// Public
+// "Constructor"
+lilog *lilog::create(const std::string &logFile, bool clear)
+{
+	return new lilog(logFile, clear);
+}
+
+// "Destructor"
+void lilog::kill()
+{
+	log(1, __FILE__, __LINE__, "Killing log file.");
+	delete this;
+}
+
 bool lilog::log(char logLevel, std::string file, unsigned int line, const char *message, ...)
 {
-	// LILog V2
 	// A big ball of wibbly wobbly, timey wimey stuff.
 	char dateTime[22] = {'\0'};
 	time_t myTime = time(nullptr);
@@ -70,40 +80,41 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 	
 	va_end(arg);
 	
-	myStream << logLevelString << " :: " << dateTime << " :: File: " << file << "(Line: " << line << ") :: " << messageFull << std::endl; // Prints all needed info to the log file
+	myStream << logLevelString << " :: " << dateTime << " :: File: " << file << " (Line: " << line << ") :: " << messageFull << std::endl; // Prints all needed info to the log file
 	
 	return true;
 }
 
 void lilog::clearLogFile()
 {
+	if (myStream.is_open()) this->close();
+	myStream.open(logFile, std::ofstream::out | std::ofstream::trunc);
+	myStream.close();
+	this->open();
+	log(1, __FILE__, __LINE__, "Log file cleared.");
+}
+
+void lilog::open()
+{
+	myStream.open(logFile, std::ofstream::out | std::ofstream::app);
 	if (!myStream.is_open())
 	{
-		myStream.open(logFile);
-		if (!myStream.is_open())
-		{
-			std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
-			return;
-		}
+		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
+		this->kill();
+		return;
 	}
-	std::ofstream ofs;
-	ofs.open(logFile, std::ofstream::out | std::ofstream::trunc);
-	ofs.close();
+	log(1, __FILE__, __LINE__, "Opening log file.");
 }
 
 void lilog::close()
 {
-	log(1, __FILE__, __LINE__, "Closing log file (close).");
+	log(1, __FILE__, __LINE__, "Closing log file.");
 	myStream.close();
 }
 
-void lilog::kill()
-{
-	delete this;
-}
-
+// Destructor (Private)
 lilog::~lilog()
 {
-	log(1, __FILE__, __LINE__, "Closing log file (kill).");
-	myStream.close();
+	printf("Log destructor call\n");
+	if (myStream.is_open()) this->close();
 }
