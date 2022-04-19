@@ -8,8 +8,8 @@
  * Handles all encryption requests
  */
 
-#ifndef CLIENT_ENCRYPT_HPP
-#define CLIENT_ENCRYPT_HPP
+#ifndef LIES_ENCRYPT_HPP
+#define LIES_ENCRYPT_HPP
 
 // Libraries
 // Definitions
@@ -22,4 +22,4 @@ private:
 };
 
 
-#endif //CLIENT_ENCRYPT_HPP
+#endif //LIES_ENCRYPT_HPP

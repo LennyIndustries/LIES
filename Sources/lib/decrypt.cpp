@@ -4,4 +4,4 @@
  * Copyright (c) 2022 Lenny Industries. All rights reserved.
  */
 
-#include "lib/cryptLib.hpp"
+#include "include/decrypt.hpp"

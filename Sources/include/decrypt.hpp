@@ -8,8 +8,8 @@
  * Handles all decryption requests
  */
 
-#ifndef CLIENT_DECRYPT_HPP
-#define CLIENT_DECRYPT_HPP
+#ifndef LIES_DECRYPT_HPP
+#define LIES_DECRYPT_HPP
 
 // Libraries
 // Definitions
@@ -22,4 +22,4 @@ private:
 };
 
 
-#endif //CLIENT_DECRYPT_HPP
+#endif //LIES_DECRYPT_HPP

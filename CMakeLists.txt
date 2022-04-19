@@ -36,22 +36,24 @@ set(ALL_LIBS
 project(server)
 
 set(project_headers
-		#Sources/*.hpp
+		#Sources/?include?/*.hpp
 		Sources/include/lilog.hpp
 		Sources/include/inputHandler.hpp
-		Sources/include/encrypt.cpp
-		Sources/include/decrypt.cpp
-		Sources/include/cryptLib.cpp
+		Sources/include/encrypt.hpp
+		Sources/include/decrypt.hpp
+		Sources/include/cryptLib.hpp
+		Sources/include/connectionHandler.hpp
 		)
 
 set(project_sources
-		#Sources/*.cpp
+		#Sources/?lib?/*.cpp
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
 		Sources/lib/inputHandler.cpp
-		Sources/include/encrypt.cpp
-		Sources/include/decrypt.cpp
-		Sources/include/cryptLib.cpp
+		Sources/lib/encrypt.cpp
+		Sources/lib/decrypt.cpp
+		Sources/lib/cryptLib.cpp
+		Sources/lib/connectionHandler.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})
@@ -67,22 +69,24 @@ target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
 project(client)
 
 set(project_headers
-		#Sources/*.hpp
+		#Sources/?include?/*.hpp
 		Sources/include/lilog.hpp
 		Sources/include/inputHandler.hpp
-		Sources/include/encrypt.cpp
-		Sources/include/decrypt.cpp
-		Sources/include/cryptLib.cpp
+		Sources/include/encrypt.hpp
+		Sources/include/decrypt.hpp
+		Sources/include/cryptLib.hpp
+		Sources/include/connectionHandler.hpp
 		)
 
 set(project_sources
-		#Sources/*.cpp
+		#Sources/?lib?/*.cpp
 		Sources/${PROJECT_NAME}.cpp
 		Sources/lib/lilog.cpp
 		Sources/lib/inputHandler.cpp
-		Sources/include/encrypt.cpp
-		Sources/include/decrypt.cpp
-		Sources/include/cryptLib.cpp
+		Sources/lib/encrypt.cpp
+		Sources/lib/decrypt.cpp
+		Sources/lib/cryptLib.cpp
+		Sources/lib/connectionHandler.cpp
 		)
 
 message("PROJECT_NAME=" ${PROJECT_NAME})

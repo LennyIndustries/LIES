@@ -115,6 +115,5 @@ void lilog::close()
 // Destructor (Private)
 lilog::~lilog()
 {
-	printf("Log destructor call\n");
 	if (myStream.is_open()) this->close();
 }

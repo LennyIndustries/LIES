@@ -4,4 +4,4 @@
  * Copyright (c) 2022 Lenny Industries. All rights reserved.
  */
 
-#include "lib/encrypt.hpp"
+#include "include/encrypt.hpp"

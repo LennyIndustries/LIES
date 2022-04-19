@@ -8,8 +8,8 @@
  * Helps out with encryption and decryption
  */
 
-#ifndef CLIENT_CRYPTLIB_HPP
-#define CLIENT_CRYPTLIB_HPP
+#ifndef LIES_CRYPTLIB_HPP
+#define LIES_CRYPTLIB_HPP
 
 // Libraries
 // Definitions
@@ -22,4 +22,4 @@ private:
 };
 
 
-#endif //CLIENT_CRYPTLIB_HPP
+#endif //LIES_CRYPTLIB_HPP

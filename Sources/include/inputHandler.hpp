@@ -8,8 +8,8 @@
  * CMD input handling courtesy of https://stackoverflow.com/a/868894/4620857
  */
 
-#ifndef CLIENT_INPUTHANDLER_HPP
-#define CLIENT_INPUTHANDLER_HPP
+#ifndef LIES_INPUTHANDLER_HPP
+#define LIES_INPUTHANDLER_HPP
 
 // Libraries
 #include <string>
@@ -30,4 +30,4 @@ private:
 };
 
 
-#endif //CLIENT_INPUTHANDLER_HPP
+#endif //LIES_INPUTHANDLER_HPP

@@ -10,13 +10,14 @@
  * Used for logging purposes
  */
 
-#ifndef MAIN_LILOG_HPP
-#define MAIN_LILOG_HPP
+#ifndef LENNYINDUSTRIES_LILOG_HPP
+#define LENNYINDUSTRIES_LILOG_HPP
 
 // Libraries
 #include <cstdarg>
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 // Definitions
 // Macros
@@ -41,4 +42,4 @@ private:
 };
 
 
-#endif //MAIN_LILOG_HPP
+#endif //LENNYINDUSTRIES_LILOG_HPP
