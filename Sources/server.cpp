@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				connectionHandler myConnectionHandler(str_f, str_m, uuid::uuid());
+//				connectionHandler myConnectionHandler(str_f, str_m, uuid::uuid());
 			}
 		}
 	}

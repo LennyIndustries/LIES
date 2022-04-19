@@ -73,8 +73,10 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 	
 	va_start(arg, message); // Argument handling
 	
-	int n = ::_vscprintf(message, arg);
-	char *messageFull = new char[n + 1];
+//	int n = ::_vscprintf(message, arg);
+	int n = vsnprintf(nullptr, 0, message, arg);
+//	std::cout << n << std::endl;
+	char messageFull[n];// = new char[n];
 	
 	::vsprintf(messageFull, message, arg);
 	
