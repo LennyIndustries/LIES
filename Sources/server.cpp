@@ -85,12 +85,12 @@ int main(int argc, char **argv)
 			return ERR_1;
 		}
 		
-		subscriber.setsockopt(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX)); // LennyIndustries|ProjectName|Function|Message
+		subscriber.set(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX)); // LennyIndustries|ProjectName|Function|Message
 		
-		zmq::message_t *msg = new zmq::message_t();
+		auto *msg = new zmq::message_t();
 		std::string msgStr, function, message, subMsgStr;
 		std::size_t pos;
-		while (subscriber.connected())
+		while (subscriber.handle() != nullptr)
 		{
 			subscriber.recv(msg);
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
@@ -108,9 +108,9 @@ int main(int argc, char **argv)
 			std::strcpy(str_f, function.c_str());
 			std::strcpy(str_m, message.c_str());
 			
-			LOG(myLog, 1, "Received message; function: %s; message: %s", str_f, str_m);
+			LOG(myLog, 1, "Received message; function: %s; message: %s.", str_f, str_m);
 			
-			std::cout << "Received message: " << msgStr << std::endl << "Function: " << function << "\nMessage: " << message << std::endl;
+			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
 			
 			if (function == "exit")
 			{
