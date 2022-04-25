@@ -11,13 +11,29 @@
 
 #include "include/connectionHandler.hpp"
 
-// Constructor (Public)
-connectionHandler::connectionHandler(const std::string& function, const std::string& message, unsigned int uuid)
+// Constructor (Private)
+connectionHandler::connectionHandler(const std::string &function, const std::string &message, unsigned int uuid)
 {
+	this->function = function;
+	this->message = message;
 	this->uuid = uuid;
+	
+	this->functionID = functionSolver();
 }
 
 // Public
+// "Constructor"
+connectionHandler *connectionHandler::create(const std::string &function, const std::string &message, unsigned int uuid)
+{
+	return new connectionHandler(function, message, uuid);
+}
+
+// "Destructor"
+void connectionHandler::kill()
+{
+	delete this;
+}
+
 unsigned int connectionHandler::getUUID() const
 {
 	return uuid;
@@ -25,5 +41,12 @@ unsigned int connectionHandler::getUUID() const
 
 // Protected
 // Private
+char connectionHandler::functionSolver()
+{
+	// Steps through possible functions and returns a number for them
+	return 0;
+}
 
-// Destructor (?)
+// Destructor (Private)
+connectionHandler::~connectionHandler()
+= default;

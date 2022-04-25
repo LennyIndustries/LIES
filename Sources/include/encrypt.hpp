@@ -12,13 +12,27 @@
 #define LIES_ENCRYPT_HPP
 
 // Libraries
+#include "cryptLib.hpp"
 // Definitions
 
 class encrypt
 {
 public:
+	encrypt(char *image, char *message);
+	// Functions
+	void encryptImage();
+	// Getters / Setters
+	void setImage(char *image);
+	void setText(char *message);
+	char *getImage();
 protected:
 private:
+	// Variables
+	char *inputImage;
+	char *text;
+	char *returnImage;
+	
+	char *headerData, *imageData;
 };
 
 

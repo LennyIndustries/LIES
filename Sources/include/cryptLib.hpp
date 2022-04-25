@@ -12,11 +12,14 @@
 #define LIES_CRYPTLIB_HPP
 
 // Libraries
+#include <cstdio>
+#include <iostream>
 // Definitions
 
 class cryptLib
 {
 public:
+	static char getImageData(char *imageP, char **headerReturn, char **dataReturn);
 protected:
 private:
 };

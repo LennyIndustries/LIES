@@ -81,11 +81,12 @@ int main(int argc, char **argv)
 		{
 			LOG(myLog, 3, "Invalid network option");
 			std::cout << "No valid network option given.\n";
-			std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
+			std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n";
+			std::cout << "'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
 			return ERR_1;
 		}
 		
-		subscriber.set(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX)); // LennyIndustries|ProjectName|Function|Message
+		subscriber.setsockopt(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX)); // LennyIndustries|ProjectName|Function|Message
 		
 		auto *msg = new zmq::message_t();
 		std::string msgStr, function, message, subMsgStr;
@@ -112,13 +113,13 @@ int main(int argc, char **argv)
 			
 			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
 			
-			if (function == "exit")
+			if (function != "exit")
 			{
-				return std::stoi(message);
+				auto *myConnectionHandler = connectionHandler::create(str_f, str_m, 0);
 			}
 			else
 			{
-//				connectionHandler myConnectionHandler(str_f, str_m, uuid::uuid());
+				return std::stoi(message);
 			}
 		}
 	}

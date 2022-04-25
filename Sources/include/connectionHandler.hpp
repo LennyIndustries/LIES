@@ -19,11 +19,24 @@
 class connectionHandler
 {
 public:
-	connectionHandler(const std::string& function, const std::string& message, unsigned int uuid);
+	// Con- Destructor
+	static connectionHandler *create(const std::string &function, const std::string &message, unsigned int uuid);
+	void kill();
+	// Getters / Setters
 	[[nodiscard]] unsigned int getUUID() const;
 protected:
 private:
-	unsigned int uuid;
+	// Con- Destructor
+	connectionHandler(const std::string &function, const std::string &message, unsigned int uuid);
+	~connectionHandler();
+	// Functions
+	char functionSolver ();
+	// Variables
+	std::string function;
+	std::string message;
+	unsigned int uuid; // Unused, meant for multithreading
+	
+	char functionID;
 };
 
 
