@@ -14,13 +14,14 @@
 // Libraries
 #include <cstdio>
 #include <iostream>
+#include <cstring>
 // Definitions
 
 class cryptLib
 {
 public:
-	static char getImageData(char *imageP, char **headerReturn, char **dataReturn);
 protected:
+	static char getImageData(char *imageP, char **headerReturn, char **dataReturn);
 private:
 };
 

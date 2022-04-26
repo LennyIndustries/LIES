@@ -15,7 +15,7 @@
 #include "cryptLib.hpp"
 // Definitions
 
-class encrypt
+class encrypt : private cryptLib
 {
 public:
 	encrypt(char *image, char *message);

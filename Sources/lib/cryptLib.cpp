@@ -8,6 +8,7 @@
 
 // Constructor (?)
 // Public
+// Protected
 char cryptLib::getImageData(char *imageP, char **headerReturn, char **dataReturn)
 {
 	// File
@@ -39,7 +40,7 @@ char cryptLib::getImageData(char *imageP, char **headerReturn, char **dataReturn
 		return 0;
 	}
 	// Filling memory
-	wmemset(reinterpret_cast<wchar_t *>(headerData), 0, 54);
+	memset(reinterpret_cast<wchar_t *>(headerData), 0, 54);
 	// Reading header data
 	fread(headerData, sizeof(unsigned char), 54, image);
 	// Getting header data
@@ -60,8 +61,8 @@ char cryptLib::getImageData(char *imageP, char **headerReturn, char **dataReturn
 		return 0;
 	}
 	// Filling memory
-	wmemset(reinterpret_cast<wchar_t *>(*headerReturn), 0, sizeof(char) * (dataOffset));
-	wmemset(reinterpret_cast<wchar_t *>(*dataReturn), 0, sizeof(char) * (imageFileSize - dataOffset));
+	memset(reinterpret_cast<wchar_t *>(*headerReturn), 0, sizeof(char) * (dataOffset));
+	memset(reinterpret_cast<wchar_t *>(*dataReturn), 0, sizeof(char) * (imageFileSize - dataOffset));
 	// Reading image data
 	fseek(image, 0, SEEK_SET); // Start at the beginning of the file then leave the pointer there
 	fread(*headerReturn, sizeof(unsigned char), dataOffset, image);
@@ -72,6 +73,5 @@ char cryptLib::getImageData(char *imageP, char **headerReturn, char **dataReturn
 	return 1;
 }
 
-// Protected
 // Private
 // Destructor (?)
