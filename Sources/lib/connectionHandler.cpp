@@ -14,9 +14,14 @@
 // Constructor (Private)
 connectionHandler::connectionHandler(const std::string &function, const std::string &message, unsigned int uuid)
 {
+	// Passed values
 	this->function = function;
 	this->message = message;
 	this->uuid = uuid;
+	// Default values
+	this->functionID = 0;
+	this->text = nullptr;
+	this->image = nullptr;
 	
 	std::cout << "Solving message: " << this->message << std::endl;
 	messageSolver();

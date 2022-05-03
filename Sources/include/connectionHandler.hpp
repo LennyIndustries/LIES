@@ -45,7 +45,7 @@ private:
 	std::string message;
 	unsigned int uuid; // Unused, meant for multithreading
 	
-	char functionID = 0;
+	char functionID;
 	std::string messageCommand;
 	std::string messageArgument;
 	
