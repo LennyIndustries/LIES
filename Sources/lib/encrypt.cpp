@@ -7,13 +7,15 @@
 #include "include/encrypt.hpp"
 
 // Constructor (Public)
-encrypt::encrypt(char* image, char* message)
+encrypt::encrypt(char *image, char *message)
 {
 	this->inputImage = image;
 	this->text = message;
 	this->returnImage = nullptr;
 	this->headerData = nullptr;
 	this->imageData = nullptr;
+	
+	std::cout << "Encrypt created\n" << "inputImage = " << inputImage << "\ntext = " << text << std::endl;
 }
 
 // Public

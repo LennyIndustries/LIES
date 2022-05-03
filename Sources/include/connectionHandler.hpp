@@ -12,9 +12,18 @@
 #define LIES_CONNECTIONHANDLER_HPP
 
 // Libraries
-#include <string>
+#include <cstring>
+#include <iostream>
+//#include <cstdlib>
+//#include <vector>
+//#include <iterator>
+
+#include "encrypt.hpp"
+#include "decrypt.hpp"
 
 // Definitions
+#define STX 2 // Start of Text
+#define ETX 3 // End of Text
 
 class connectionHandler
 {
@@ -30,13 +39,20 @@ private:
 	connectionHandler(const std::string &function, const std::string &message, unsigned int uuid);
 	~connectionHandler();
 	// Functions
-	char functionSolver ();
+	void messageSolver();
 	// Variables
 	std::string function;
 	std::string message;
 	unsigned int uuid; // Unused, meant for multithreading
 	
-	char functionID;
+	char functionID = 0;
+	std::string messageCommand;
+	std::string messageArgument;
+	
+	char *text;
+	char *image;
+	
+	std::string output;
 };
 
 

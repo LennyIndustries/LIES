@@ -12,7 +12,7 @@
 char cryptLib::getImageData(char *imageP, char **headerReturn, char **dataReturn)
 {
 	// File
-	FILE *image = nullptr;
+	FILE *image = nullptr; // Change to istream
 	// Image data
 	char *headerData = nullptr;
 	int imageFileSize = 0;

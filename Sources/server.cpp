@@ -35,8 +35,10 @@
 #define LOCAL "tcp://192.168.1.8:24042"
 #define INTERNET "tcp://benternet.pxl-ea-ict.be:24042"
 #define MSG_PREFIX "LennyIndustries|LIES|"
+#define PASSWD "LennyIndustriesAdmin" // Safety first ;p
 
 // Error codes
+#define ERR_R_EXIT -1 // Remote exit request
 #define ERR_0 0 // No error
 #define ERR_1 1 // Invalid network option
 
@@ -97,9 +99,9 @@ int main(int argc, char **argv)
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 			
 			subMsgStr = msgStr.substr(strlen(MSG_PREFIX));
-			std::cout << subMsgStr << std::endl;
+//			std::cout << subMsgStr << std::endl;
 			pos = subMsgStr.find('|');
-			std::cout << pos << std::endl;
+//			std::cout << pos << std::endl;
 			
 			function = subMsgStr.substr(0, pos);
 			message = subMsgStr.substr(pos + 1);
@@ -119,7 +121,10 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				return std::stoi(message);
+				if (message == PASSWD)
+				{
+					return ERR_R_EXIT;
+				}
 			}
 		}
 	}
