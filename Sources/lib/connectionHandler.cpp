@@ -32,7 +32,8 @@ connectionHandler::connectionHandler(const std::string &function, const std::str
 	}
 	else
 	{
-		std::cout << "ERROR: Failed to solve function: " << functionID << std::endl;
+		std::cout << "ERROR: Failed to get FID\n";
+		// Terminate
 	}
 }
 
@@ -61,8 +62,6 @@ void connectionHandler::messageSolver()
 	// Steps through possible functions and returns a number for them
 	std::string storage;
 	std::string rest;
-//	std::string messageCommand = nullptr;
-//	std::string messageArgument = nullptr;
 	std::size_t colonPosition = 0;
 	std::size_t equalsPosition;
 	std::size_t startOfTextPosition;
@@ -70,11 +69,11 @@ void connectionHandler::messageSolver()
 	
 	// Find command & argument
 	rest = message;
-//	std::cout << "Starting while\nstd::string::npos = " << std::string::npos << std::endl;
 	while (colonPosition != std::string::npos)
 	{
 		colonPosition = rest.find(':');
 		std::cout << "Found ':' at: " << colonPosition << std::endl;
+		
 		if (colonPosition != std::string::npos)
 		{
 			storage = rest.substr(0, colonPosition);
@@ -88,8 +87,10 @@ void connectionHandler::messageSolver()
 		{
 			storage = rest;
 		}
+		
 		// Set command & argument
 		equalsPosition = storage.find('=');
+		std::cout << "Found '=' at: " << equalsPosition << std::endl;
 		if (equalsPosition != std::string::npos)
 		{
 			this->messageCommand = storage.substr(0, equalsPosition);
@@ -100,55 +101,48 @@ void connectionHandler::messageSolver()
 			this->messageCommand = storage;
 			std::cout << "Setting messageCommand = \"" << this->messageCommand << "\" from storage\n";
 		}
+		
 		// Filter command & argument
-		if ((messageCommand == "image") || (messageCommand == "text"))
+		if ((messageCommand == "image") && (equalsPosition != std::string::npos))
 		{
-			if (messageCommand == "image")
+			this->image = (char *) malloc(storage.substr(equalsPosition + 1).size());
+			std::strcpy(this->image, storage.substr(equalsPosition + 1).c_str());
+			std::cout << "Setting image = \"" << this->image << "\"\n";
+		}
+		else if ((messageCommand == "text") && (equalsPosition != std::string::npos))
+		{
+			startOfTextPosition = message.find(STX);
+			endOfTextPosition = message.find(ETX);
+			std::cout << "startOfTextPosition: " << startOfTextPosition << "\nendOfTextPosition: " << endOfTextPosition << std::endl;
+			
+			if ((startOfTextPosition != std::string::npos) && (endOfTextPosition != std::string::npos))
 			{
-				this->image = (char *) malloc(storage.substr(equalsPosition + 1).size());
-				std::strcpy(this->image, storage.substr(equalsPosition + 1).c_str());
-//				this->image.resize(storage.substr(equalsPosition + 1).size());
-//				std::copy(storage.substr(equalsPosition + 1).begin(), storage.substr(equalsPosition + 1).end(), std::back_inserter(this->image));
-				std::cout << "Setting image = \"" << this->image << "\"\n";
+				storage = message.substr(startOfTextPosition + 1, endOfTextPosition - startOfTextPosition - 1);
+				std::cout << "Storage (text exception): " << storage << std::endl;
+				rest = message.substr(endOfTextPosition + 2);
+				std::cout << "Rest (text exception): " << rest << std::endl;
+				this->text = (char *) malloc(storage.size());
+				std::strcpy(this->text, storage.c_str());
+				std::cout << "Setting text = \"" << this->text << "\"\n";
 			}
 			else
 			{
-				startOfTextPosition = message.find(STX);
-				endOfTextPosition = message.find(ETX);
-				std::cout << "startOfTextPosition: " << startOfTextPosition << "\nendOfTextPosition: " << endOfTextPosition << std::endl;
-				if ((startOfTextPosition != std::string::npos) && (endOfTextPosition != std::string::npos))
-				{
-					storage = message.substr(startOfTextPosition + 1, endOfTextPosition - startOfTextPosition - 1);
-					std::cout << "Storage (text exception): " << storage << std::endl;
-					rest = message.substr(endOfTextPosition + 2);
-					std::cout << "Rest (text exception): " << rest << std::endl;
-					this->text = (char *) malloc(storage.size());
-					std::strcpy(this->text, storage.c_str());
-					std::cout << "Setting text = \"" << this->text << "\"\n";
-				}
-				else
-				{
-					std::cout << "Failed to fetch message\n";
-				}
+				std::cout << "Failed to fetch message\n";
 			}
 		}
-		else if (((messageCommand == "encrypt") || (messageCommand == "decrypt")) && this->functionID == 0)
+		else if ((messageCommand == "encrypt") && (this->functionID == 0))
 		{
-			if (messageCommand == "encrypt")
-			{
-				this->functionID = 1;
-				std::cout << "Setting functionID = 1 (Encrypt)\n";
-			}
-			else
-			{
-				
-				this->functionID = 2;
-				std::cout << "Setting functionID = 2 (Decrypt)\n";
-			}
+			this->functionID = 1;
+			std::cout << "Setting functionID = 1 (Encrypt)\n";
+		}
+		else if ((messageCommand == "decrypt") && (this->functionID == 0))
+		{
+			this->functionID = 2;
+			std::cout << "Setting functionID = 2 (Decrypt)\n";
 		}
 		else
 		{
-			std::cout << "ERROR: Command not found or already set: " << messageCommand << std::endl;
+			std::cout << "ERROR: Command not found, not complete or already set: " << messageCommand << std::endl;
 		}
 	}
 }
