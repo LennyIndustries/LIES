@@ -7,39 +7,55 @@
 #include "include/encrypt.hpp"
 
 // Constructor (Public)
-encrypt::encrypt(char *image, char *message)
+encrypt::encrypt(std::vector <char> image, std::vector <char> message)
 {
-	this->inputImage = image;
-	this->text = message;
-	this->returnImage = nullptr;
-	this->headerData = nullptr;
-	this->imageData = nullptr;
+	this->inputImage = std::move(image);
+	this->text = std::move(message);
+//	this->returnImage = nullptr;
+//	this->headerData = nullptr;
+//	this->imageData = nullptr;
 	
-	std::cout << "Encrypt created\n" << "inputImage = " << inputImage << "\ntext = " << text << std::endl;
+	std::cout << "Encrypt created\n" << "inputImage = " << cryptLib::printableVector(this->inputImage) << "\ntext = " << cryptLib::printableVector(this->text) << std::endl;
+	encryptImage();
 }
 
 // Public
 // Functions
 void encrypt::encryptImage()
 {
-	if (!(cryptLib::getImageData(this->inputImage, &this->headerData, &this->imageData)))
-	{
-		std::cout << "Failed to get image data from: " << _fullpath(nullptr, this->inputImage, _MAX_PATH) << std::endl;
-	}
+	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
+	std::cout << "inputImage = \"" << cryptLib::printableVector(this->inputImage)
+	<< "\"\nheaderData = \"" << cryptLib::printableVector(this->headerData)
+	<< "\"\nimageData = \"" << cryptLib::printableVector(this->imageData) << "\"\n";
+	
+	std::ofstream image ("outputImage.bmp", std::ios::out | std::ofstream::binary);
+	
+	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator<char>(image));
+	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator<char>(image));
+	
+//	size_t size;
+//
+//	size = headerData.size();
+//	image.write((char*)&size, sizeof(size));
+//
+//	size = imageData.size();
+//	image.write((char*)&size, sizeof(size));
+	
+	image.close();
 }
 
 // Getters / Setters
-void encrypt::setImage(char *image)
+void encrypt::setImage(std::vector <char> image)
 {
-	this->inputImage = image;
+	this->inputImage = std::move(image);
 }
 
-void encrypt::setText(char *message)
+void encrypt::setText(std::vector <char> message)
 {
-	this->text = message;
+	this->text = std::move(message);
 }
 
-char *encrypt::getImage()
+std::vector <char> encrypt::getImage()
 {
 	return returnImage;
 }

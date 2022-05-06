@@ -13,26 +13,29 @@
 
 // Libraries
 #include "cryptLib.hpp"
+
+#include <vector>
+#include <utility>
+#include <fstream>
+
 // Definitions
 
 class encrypt : private cryptLib
 {
 public:
-	encrypt(char *image, char *message);
+	encrypt(std::vector <char> image, std::vector <char> message);
 	// Functions
 	void encryptImage();
 	// Getters / Setters
-	void setImage(char *image);
-	void setText(char *message);
-	char *getImage();
+	void setImage(std::vector <char> image);
+	void setText(std::vector <char> message);
+	std::vector <char> getImage();
 protected:
 private:
 	// Variables
-	char *inputImage;
-	char *text;
-	char *returnImage;
-	
-	char *headerData, *imageData;
+	std::vector <char> inputImage, returnImage;
+	std::vector <char> text;
+	std::vector <char> headerData, imageData;
 };
 
 
