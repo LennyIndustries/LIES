@@ -72,7 +72,7 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 	strftime(dateTime, 22, "%H:%M:%S - %d/%m/%Y", localtime(&myTime)); // Creates date and time string for log file
 	
 	va_start(arg, message); // Argument handling
-	
+
 //	int n = ::_vscprintf(message, arg);
 	int n = vsnprintf(nullptr, 0, message, arg);
 //	std::cout << n << std::endl;
@@ -89,7 +89,8 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 
 void lilog::clearLogFile()
 {
-	if (myStream.is_open()) this->close();
+	if (myStream.is_open())
+		this->close();
 	myStream.open(logFile, std::ofstream::out | std::ofstream::trunc);
 	myStream.close();
 	this->open();
@@ -117,5 +118,6 @@ void lilog::close()
 // Destructor (Private)
 lilog::~lilog()
 {
-	if (myStream.is_open()) this->close();
+	if (myStream.is_open())
+		this->close();
 }
