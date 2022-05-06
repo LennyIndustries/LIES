@@ -108,6 +108,8 @@ int main(int argc, char **argv)
 			
 			char str_f[function.length() + 1];
 			char str_m[message.length() + 1];
+			std::vector<char> functionVector(function.begin(), function.end());
+			std::vector<char> messageVector(message.begin(), message.end());
 			std::strcpy(str_f, function.c_str());
 			std::strcpy(str_m, message.c_str());
 			
@@ -117,7 +119,7 @@ int main(int argc, char **argv)
 			
 			if (function != "exit")
 			{
-				auto *myConnectionHandler = connectionHandler::create(str_f, str_m, 0);
+				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, 0);
 			}
 			else
 			{
