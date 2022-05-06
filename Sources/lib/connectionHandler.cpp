@@ -12,7 +12,7 @@
 #include "include/connectionHandler.hpp"
 
 // Constructor (Private)
-connectionHandler::connectionHandler(const std::string &function, const std::string &message, unsigned int uuid)
+connectionHandler::connectionHandler(std::vector <char> &function, const std::vector <char> &message, unsigned int uuid)
 {
 	// Passed values
 	this->function = function;
@@ -20,10 +20,10 @@ connectionHandler::connectionHandler(const std::string &function, const std::str
 	this->uuid = uuid;
 	// Default values
 	this->functionID = 0;
-	this->text = nullptr;
-	this->image = nullptr;
+//	this->text = nullptr;
+//	this->image = nullptr;
 	
-	std::cout << "Solving message: " << this->message << std::endl;
+	std::cout << "Solving message: " << cryptLib::printableVector(this->message) << std::endl;
 	messageSolver();
 	
 	if (functionID == 1)
@@ -44,7 +44,7 @@ connectionHandler::connectionHandler(const std::string &function, const std::str
 
 // Public
 // "Constructor"
-connectionHandler *connectionHandler::create(const std::string &function, const std::string &message, unsigned int uuid)
+connectionHandler *connectionHandler::create(std::vector <char> &function, std::vector <char> &message, unsigned int uuid)
 {
 	return new connectionHandler(function, message, uuid);
 }
@@ -65,28 +65,26 @@ unsigned int connectionHandler::getUUID() const
 void connectionHandler::messageSolver()
 {
 	// Steps through possible functions and returns a number for them
-	std::string storage;
-	std::string rest;
+	std::vector <char> storage;
+	std::vector <char> rest;
 	std::size_t colonPosition = 0;
 	std::size_t equalsPosition;
-	std::size_t startOfTextPosition;
-	std::size_t endOfTextPosition;
 	
 	// Find command & argument
 	rest = message;
 	while (colonPosition != std::string::npos)
 	{
-		colonPosition = rest.find(':');
+		colonPosition = cryptLib::vectorFind(rest, ':'); //rest.find(':');
 		std::cout << "Found ':' at: " << colonPosition << std::endl;
 		
 		if (colonPosition != std::string::npos)
 		{
-			storage = rest.substr(0, colonPosition);
-			std::cout << "Storage: " << storage << std::endl;
-			rest = rest.substr(colonPosition);
-			std::cout << "Rest: " << rest << std::endl;
-			rest.erase(0, 1);
-			std::cout << "Rest after erase: " << rest << std::endl;
+			storage = cryptLib::subVector(rest, 0, colonPosition); //rest.substr(0, colonPosition);
+			std::cout << "Storage: " << cryptLib::printableVector(storage) << std::endl;
+			rest = cryptLib::subVector(rest, colonPosition + 1); //rest.substr(colonPosition + 1);
+			std::cout << "Rest: " << cryptLib::printableVector(rest) << std::endl;
+//			rest.erase(0, 1);
+//			std::cout << "Rest after erase: " << rest << std::endl;
 		}
 		else
 		{
@@ -94,67 +92,69 @@ void connectionHandler::messageSolver()
 		}
 		
 		// Set command & argument
-		equalsPosition = storage.find('=');
+		equalsPosition = cryptLib::vectorFind(storage, '='); //storage.find('=');
 		std::cout << "Found '=' at: " << equalsPosition << std::endl;
 		if (equalsPosition != std::string::npos)
 		{
-			this->messageCommand = storage.substr(0, equalsPosition);
-			std::cout << "Setting messageCommand = \"" << this->messageCommand << "\" from substring\n";
+			this->messageCommand = cryptLib::subVector(storage, 0, equalsPosition); //storage.substr(0, equalsPosition);
+			std::cout << "Setting messageCommand = \"" << cryptLib::printableVector(this->messageCommand) << "\" from substring\n";
 		}
 		else
 		{
 			this->messageCommand = storage;
-			std::cout << "Setting messageCommand = \"" << this->messageCommand << "\" from storage\n";
+			std::cout << "Setting messageCommand = \"" << cryptLib::printableVector(this->messageCommand) << "\" from storage\n";
 		}
 		
 		// Filter command & argument
-		if ((messageCommand == "image") && (equalsPosition != std::string::npos))
+		if ((cryptLib::vectorCompare(messageCommand, "image")) && (equalsPosition != std::string::npos)) // messageCommand == "image"
 		{
-			this->image = (char *) malloc(storage.substr(equalsPosition + 1).size());
-			std::strcpy(this->image, storage.substr(equalsPosition + 1).c_str());
-			std::cout << "Setting image = \"" << this->image << "\"\n";
+			std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1); //storage.substr(equalsPosition + 1);
+			std::cout << "Setting storageSubstr = \"" << cryptLib::printableVector(storageSubstr) << "\" from storage\n";
+			std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->image));
+//			std::cout << this->image.size() << std::endl;
+			std::cout << "Setting image = \"" << cryptLib::printableVector(this->image) << "\" : " << this->image.size() << std::endl;
 		}
-		else if ((messageCommand == "text") && (equalsPosition != std::string::npos))
+		else if ((cryptLib::vectorCompare(messageCommand, "text")) && (equalsPosition != std::string::npos)) // messageCommand == "text"
 		{
-			startOfTextPosition = message.find(STX);
-			endOfTextPosition = message.find(ETX);
+			std::size_t startOfTextPosition = cryptLib::vectorFind(message, char(STX)); //message.find(STX);
+			std::size_t endOfTextPosition = cryptLib::vectorFind(message, char(ETX)); //message.find(ETX);
 			std::cout << "startOfTextPosition: " << startOfTextPosition << "\nendOfTextPosition: " << endOfTextPosition << std::endl;
 			
 			if ((startOfTextPosition != std::string::npos) && (endOfTextPosition != std::string::npos))
 			{
-				storage = message.substr(startOfTextPosition + 1, endOfTextPosition - startOfTextPosition - 1);
-				std::cout << "Storage (text exception): " << storage << std::endl;
-				rest = message.substr(endOfTextPosition + 2);
-				std::cout << "Rest (text exception): " << rest << std::endl;
-				this->text = (char *) malloc(storage.size());
-				std::strcpy(this->text, storage.c_str());
-				std::cout << "Setting text = \"" << this->text << "\"\n";
+				storage = cryptLib::subVector(message, startOfTextPosition + 1, endOfTextPosition - startOfTextPosition - 1); //message.substr(startOfTextPosition + 1, endOfTextPosition - startOfTextPosition - 1);
+				std::cout << "Storage (text exception): " << cryptLib::printableVector(storage) << std::endl;
+				rest = cryptLib::subVector(message, endOfTextPosition + 2); //message.substr(endOfTextPosition + 2);
+				std::cout << "Rest (text exception): " << cryptLib::printableVector(rest) << std::endl;
+				
+				std::copy(storage.begin(), storage.end(), std::back_inserter(this->text));
+				std::cout << "Setting text = \"" << cryptLib::printableVector(this->text) << "\" : " << this->text.size() << std::endl;
 			}
 			else
 			{
 				std::cout << "Failed to fetch message\n";
 			}
 		}
-		else if ((messageCommand == "encrypt") && (this->functionID == 0))
+		else if ((cryptLib::vectorCompare(messageCommand, "encrypt")) && (this->functionID == 0)) //messageCommand == "encrypt"
 		{
 			this->functionID = 1;
 			std::cout << "Setting functionID = 1 (Encrypt)\n";
 		}
-		else if ((messageCommand == "decrypt") && (this->functionID == 0))
+		else if ((cryptLib::vectorCompare(messageCommand, "decrypt")) && (this->functionID == 0)) //messageCommand == "decrypt"
 		{
 			this->functionID = 2;
 			std::cout << "Setting functionID = 2 (Decrypt)\n";
 		}
 		else
 		{
-			std::cout << "ERROR: Command not found, not complete or already set: " << messageCommand << std::endl;
+			std::cout << "ERROR: Command not found, not complete or already set: " << cryptLib::printableVector(this->messageCommand) << std::endl;
 		}
 	}
 }
 
 // Destructor (Private)
-connectionHandler::~connectionHandler()
-{
-	free(this->image);
-	free(this->text);
-}
+connectionHandler::~connectionHandler() = default;
+//{
+//	free(this->image);
+//	free(this->text);
+//}

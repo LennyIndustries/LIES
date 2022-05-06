@@ -12,14 +12,14 @@
 #define LIES_CONNECTIONHANDLER_HPP
 
 // Libraries
+#include "encrypt.hpp"
+#include "decrypt.hpp"
+
 #include <cstring>
 #include <iostream>
 //#include <cstdlib>
-//#include <vector>
-//#include <iterator>
-
-#include "encrypt.hpp"
-#include "decrypt.hpp"
+#include <vector>
+#include <iterator>
 
 // Definitions
 #define STX 2 // Start of Text
@@ -29,28 +29,30 @@ class connectionHandler
 {
 public:
 	// Con- Destructor
-	static connectionHandler *create(const std::string &function, const std::string &message, unsigned int uuid);
+	static connectionHandler *create(std::vector <char> &function, std::vector <char> &message, unsigned int uuid);
 	void kill();
 	// Getters / Setters
 	[[nodiscard]] unsigned int getUUID() const;
 protected:
 private:
 	// Con- Destructor
-	connectionHandler(const std::string &function, const std::string &message, unsigned int uuid);
+	connectionHandler(std::vector <char> &function, const std::vector <char> &message, unsigned int uuid);
 	~connectionHandler();
 	// Functions
 	void messageSolver();
 	// Variables
-	std::string function;
-	std::string message;
+	std::vector <char> function;
+	std::vector <char> message;
 	unsigned int uuid; // Unused, meant for multithreading
 	
 	char functionID;
-	std::string messageCommand;
-	std::string messageArgument;
+	std::vector <char> messageCommand;
+	std::vector <char> messageArgument;
 	
-	char *text;
-	char *image;
+	std::vector <char> text;
+	std::vector <char> image;
+//	char *text;
+//	char *image;
 	
 	std::string output;
 };
