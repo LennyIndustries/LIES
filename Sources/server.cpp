@@ -113,9 +113,9 @@ int main(int argc, char **argv)
 			std::strcpy(str_f, function.c_str());
 			std::strcpy(str_m, message.c_str());
 			
-			LOG(myLog, 1, "Received message; function: %s; message: %s.", str_f, str_m);
+//			LOG(myLog, 1, "Received message; function: %s; message: %s.", str_f, str_m);
 			
-			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
+//			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
 			
 			if (function != "exit")
 			{

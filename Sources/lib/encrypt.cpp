@@ -15,7 +15,7 @@ encrypt::encrypt(std::vector <char> image, std::vector <char> message)
 //	this->headerData = nullptr;
 //	this->imageData = nullptr;
 	
-	std::cout << "Encrypt created\n" << "inputImage = " << cryptLib::printableVector(this->inputImage) << "\ntext = " << cryptLib::printableVector(this->text) << std::endl;
+//	std::cout << "Encrypt created\n" << "inputImage = " << cryptLib::printableVector(this->inputImage) << "\ntext = " << cryptLib::printableVector(this->text) << std::endl;
 	encryptImage();
 }
 
@@ -24,9 +24,9 @@ encrypt::encrypt(std::vector <char> image, std::vector <char> message)
 void encrypt::encryptImage()
 {
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
-	std::cout << "inputImage = \"" << cryptLib::printableVector(this->inputImage)
-	<< "\"\nheaderData = \"" << cryptLib::printableVector(this->headerData)
-	<< "\"\nimageData = \"" << cryptLib::printableVector(this->imageData) << "\"\n";
+//	std::cout << "inputImage = \"" << cryptLib::printableVector(this->inputImage)
+//	<< "\"\nheaderData = \"" << cryptLib::printableVector(this->headerData)
+//	<< "\"\nimageData = \"" << cryptLib::printableVector(this->imageData) << "\"\n";
 	
 	std::ofstream image ("outputImage.bmp", std::ios::out | std::ofstream::binary);
 	

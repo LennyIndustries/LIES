@@ -20,6 +20,7 @@
 //#include <cstdlib>
 #include <vector>
 #include <iterator>
+#include <cmath>
 
 // Definitions
 #define STX 2 // Start of Text
@@ -51,6 +52,7 @@ private:
 	
 	std::vector <char> text;
 	std::vector <char> image;
+	int imageLength;
 //	char *text;
 //	char *image;
 	

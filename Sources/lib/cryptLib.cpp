@@ -95,7 +95,7 @@ void cryptLib::getImageData(std::vector <char> &image, std::vector <char> &heade
 //	memset(reinterpret_cast<wchar_t *>(headerData), 0, 54);
 	// Reading header data
 	headerData = {image.begin(), image.begin() + 54};
-	std::cout << "headerData = \"" << cryptLib::printableVector(headerData) << "\"\n";
+//	std::cout << "headerData = \"" << cryptLib::printableVector(headerData) << "\"\n";
 //	fread(headerData, sizeof(unsigned char), 54, image);
 	// Getting header data
 //	imageFileSize = *(int *) &headerData[2];
