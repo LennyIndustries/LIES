@@ -24,22 +24,11 @@ encrypt::encrypt(std::vector <char> image, std::vector <char> message)
 void encrypt::encryptImage()
 {
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
-	std::cout << "inputImage = \"" << cryptLib::printableVector(this->inputImage)
-	<< "\"\nheaderData = \"" << cryptLib::printableVector(this->headerData)
-	<< "\"\nimageData = \"" << cryptLib::printableVector(this->imageData) << "\"\n";
 	
 	std::ofstream image ("outputImage.bmp", std::ios::out | std::ofstream::binary);
 	
 	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator<char>(image));
 	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator<char>(image));
-	
-//	size_t size;
-//
-//	size = headerData.size();
-//	image.write((char*)&size, sizeof(size));
-//
-//	size = imageData.size();
-//	image.write((char*)&size, sizeof(size));
 	
 	image.close();
 }
