@@ -35,6 +35,7 @@
 #define LOCAL "tcp://192.168.1.8:24042"
 #define INTERNET "tcp://benternet.pxl-ea-ict.be:24042"
 #define MSG_PREFIX "LennyIndustries|LIES|"
+#define FILTER_CHAR '|'
 #define PASSWD "LennyIndustriesAdmin" // Safety first ;p
 
 // Error codes
@@ -96,11 +97,12 @@ int main(int argc, char **argv)
 		while (subscriber.handle() != nullptr)
 		{
 			subscriber.recv(msg);
+			std::cout << "Received size: " << msg->size() << std::endl;
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 			
 			subMsgStr = msgStr.substr(strlen(MSG_PREFIX));
 //			std::cout << subMsgStr << std::endl;
-			pos = subMsgStr.find('|');
+			pos = subMsgStr.find(FILTER_CHAR);
 //			std::cout << pos << std::endl;
 			
 			function = subMsgStr.substr(0, pos);
@@ -116,12 +118,17 @@ int main(int argc, char **argv)
 //			LOG(myLog, 1, "Received message; function: %s; message: %s.", str_f, str_m);
 			
 //			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
+			std::cout << "Size of received message: " << (strlen(MSG_PREFIX) + 1 + functionVector.size() + messageVector.size()) << std::endl;
 			
-			if (function != "exit")
+			if ((function == "encrypt?") || ((function == "decrypt?")))
 			{
 				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, 0);
 			}
-			else
+			else if (function == "key?")
+			{
+				// Send the public key
+			}
+			else if (function == "exit")
 			{
 				if (message == PASSWD)
 				{

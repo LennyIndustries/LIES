@@ -33,6 +33,10 @@ std::size_t cryptLib::vectorFind(const std::vector <char>& searchVector, char se
 std::vector <char> cryptLib::subVector(const std::vector <char>& startVector, std::size_t startPos, std::size_t charCount)
 {
 	std::vector <char> returnVector;
+	if (startPos >= std::string::npos)
+	{
+		return returnVector;
+	}
 	
 	if (charCount == std::string::npos)
 	{
@@ -40,13 +44,12 @@ std::vector <char> cryptLib::subVector(const std::vector <char>& startVector, st
 		{
 			returnVector.push_back(startVector[i]);
 		}
+		return returnVector;
 	}
-	else
+
+	for (std::size_t i = startPos; i < startPos + charCount; i++)
 	{
-		for (std::size_t i = startPos; i < startPos + charCount; i++)
-		{
-			returnVector.push_back(startVector[i]);
-		}
+		returnVector.push_back(startVector[i]);
 	}
 	
 	return returnVector;

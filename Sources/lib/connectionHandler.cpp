@@ -33,9 +33,15 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 	{
 		// Decrypt
 	}
+	else if (functionID == -1)
+	{
+		std::cout << "A critical error occurred, aborting.\n";
+		return;
+	}
 	else
 	{
 		std::cout << "ERROR: Failed to get FID\n";
+		return;
 		// Terminate
 	}
 }
@@ -83,6 +89,7 @@ void connectionHandler::messageSolver()
 		else
 		{
 			storage = rest;
+			rest.clear();
 		}
 		
 		// Set command & argument
@@ -101,17 +108,39 @@ void connectionHandler::messageSolver()
 		if ((cryptLib::vectorCompare(messageCommand, "image")) && (equalsPosition != std::string::npos) && (imageLength > 0))
 		{
 			std::cout << "Command: Image\nImage length: " << this->imageLength << std::endl;
+			std::vector <char> tempRestVector;
+			if (!rest.empty()) // If there is something left add it back to storage
+			{
+				tempRestVector.clear();
+				tempRestVector = rest;
+				rest.clear();
+				rest.push_back('='); // Add the '=' back since it was removed
+				std::copy(tempRestVector.begin(), tempRestVector.end(), std::back_inserter(rest));
+				std::copy(rest.begin(), rest.end(), std::back_inserter(storage));
+			}
+			
 			if (this->imageLength != cryptLib::subVector(storage, equalsPosition + 1).size())
 			{
 				std::cout << "CRITICAL ERROR : image length does not match vector length!\n" << this->imageLength << " != " << cryptLib::subVector(storage, equalsPosition + 1).size() << std::endl;
-//				return; // Do something to stop the program from continuing.
+				this->functionID = -1;
+				return; // Do something to stop the program from continuing.
 			}
 			std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->imageLength);
 			std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->image));
 			
-			std::vector <char> tempRestVector = cryptLib::subVector(storage, (equalsPosition + 1));
+			tempRestVector.clear();
+			tempRestVector = cryptLib::subVector(storage, (equalsPosition + 1 + this->imageLength));
 			rest.clear();
-			std::copy(tempRestVector.begin(), tempRestVector.end(), std::back_inserter(rest));
+			if (!tempRestVector.empty())
+			{
+				std::cout << "Rest not empty\n";
+				std::copy(tempRestVector.begin(), tempRestVector.end(), std::back_inserter(rest));
+			}
+			else
+			{
+				std::cout << "Rest empty\n";
+				return;
+			}
 		}
 		else if ((cryptLib::vectorCompare(messageCommand, "text")) && (equalsPosition != std::string::npos))
 		{
@@ -146,17 +175,19 @@ void connectionHandler::messageSolver()
 		else if ((cryptLib::vectorCompare(messageCommand, "imageLength")) && (this->imageLength == 0))
 		{
 			std::cout << "Command: Image length\n";
-			int tmpInt  = 0;
+//			int tmpInt  = 0;
 			std::vector <char> tmpVector;
 			
 			tmpVector.clear();
 			tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
 			
-			for (int i = 0; i < tmpVector.size(); i++)
-			{
-				tmpInt += (tmpVector[i] - '0') * (pow(10, (tmpVector.size() - (i + 1))));
-			}
-			this->imageLength = tmpInt;
+//			for (int i = 0; i < tmpVector.size(); i++)
+//			{
+//				tmpInt += (tmpVector[i] - '0') * (pow(10, (tmpVector.size() - (i + 1))));
+//			}
+//			this->imageLength = tmpInt;
+			this->imageLength = std::stoi(cryptLib::printableVector(tmpVector));
+			std::cout << "Image length: " << this->imageLength << std::endl;
 		}
 		else
 		{
