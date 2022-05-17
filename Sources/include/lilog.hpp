@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+#include <sys/stat.h>
 
 // Definitions
 // Macros
@@ -26,17 +27,20 @@
 class lilog
 {
 public:
-	static lilog *create(const std::string &logFile, bool clear = false);
+	// Con- Destructor
+	static lilog *create(const std::string &logFile, bool createBackup, bool clear = false);
 	void kill();
+	// Functions
 	bool log(char logLevel, std::string file, unsigned int line, const char *message, ...);
 	void clearLogFile();
 	void open();
 	void close();
 protected:
 private:
-	explicit lilog(const std::string &logFile, bool clear);
+	// Con- Destructor
+	explicit lilog(const std::string &logFile, bool createBackup, bool clear);
 	~lilog();
-	
+	// Variables
 	std::string logFile;
 	std::ofstream myStream;
 };

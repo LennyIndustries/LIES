@@ -7,33 +7,38 @@
 #include "include/lilog.hpp"
 
 // Constructor (Private)
-lilog::lilog(const std::string &logFile, bool clear)
+lilog::lilog(const std::string &logFile, bool createBackup, bool clear)
 {
 	this->logFile = logFile;
+	
+	if (createBackup)
+	{
+		struct stat buffer{};
+		if (stat(logFile.c_str(), &buffer) == 0) // Create a backup of the old log file
+		{
+			std::cout << "Creating backup of old log file.\n";
+			std::string tmpLogName = logFile.substr(0, logFile.find('.'));
+			tmpLogName += "_old.log";
+			std::cout << tmpLogName << std::endl;
+			if (remove(tmpLogName.c_str()) != 0)
+			{
+				std::cout << "Failed to delete.\n";
+			}
+			if (rename(logFile.c_str(), tmpLogName.c_str()) != 0)
+			{
+				std::cout << "Failed to rename.\n";
+			}
+		}
+	}
+	
 	clear ? this->clearLogFile() : this->open();
-
-//	else
-//	{
-//		auto lam = [](int i)
-//		{
-//			std::cout << "aborting" << std::endl;
-//			exit(0);
-//		};
-//
-//		//^C
-//		signal(SIGINT, lam);
-//		//abort()
-//		signal(SIGABRT, lam);
-//		//sent by "kill" command
-//		signal(SIGTERM, lam);
-//	}
 }
 
 // Public
 // "Constructor"
-lilog *lilog::create(const std::string &logFile, bool clear)
+lilog *lilog::create(const std::string &logFile, bool createBackup, bool clear)
 {
-	return new lilog(logFile, clear);
+	return new lilog(logFile, createBackup, clear);
 }
 
 // "Destructor"
@@ -72,35 +77,33 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 	strftime(dateTime, 22, "%H:%M:%S - %d/%m/%Y", localtime(&myTime)); // Creates date and time string for log file
 	
 	va_start(arg, message); // Argument handling
-
-//	int n = ::_vscprintf(message, arg);
+	
 	int n = vsnprintf(nullptr, 0, message, arg);
-//	std::cout << n << std::endl;
-	char messageFull[n];// = new char[n];
+	char messageFull[n];
 	
 	::vsprintf(messageFull, message, arg);
 	
 	va_end(arg);
 	
-	myStream << logLevelString << " :: " << dateTime << " :: File: " << file << " (Line: " << line << ") :: " << messageFull << std::endl; // Prints all needed info to the log file
+	this->myStream << logLevelString << " :: " << dateTime << " :: File: " << file << " (Line: " << line << ") :: " << messageFull << std::endl; // Prints all needed info to the log file
 	
 	return true;
 }
 
 void lilog::clearLogFile()
 {
-	if (myStream.is_open())
+	if (this->myStream.is_open())
 		this->close();
-	myStream.open(logFile, std::ofstream::out | std::ofstream::trunc);
-	myStream.close();
+	this->myStream.open(this->logFile, std::ofstream::out | std::ofstream::trunc);
+	this->myStream.close();
 	this->open();
 	log(1, __FILE__, __LINE__, "Log file cleared.");
 }
 
 void lilog::open()
 {
-	myStream.open(logFile, std::ofstream::out | std::ofstream::app);
-	if (!myStream.is_open())
+	this->myStream.open(this->logFile, std::ofstream::out | std::ofstream::app);
+	if (!this->myStream.is_open())
 	{
 		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
 		this->kill();
@@ -112,12 +115,12 @@ void lilog::open()
 void lilog::close()
 {
 	log(1, __FILE__, __LINE__, "Closing log file.");
-	myStream.close();
+	this->myStream.close();
 }
 
 // Destructor (Private)
 lilog::~lilog()
 {
-	if (myStream.is_open())
+	if (this->myStream.is_open())
 		this->close();
 }
