@@ -31,10 +31,10 @@
 #include <botan/uuid.h>
 
 // Definitions
-#define LOCALHOST "tcp://localhost:24042"
-#define LOCAL "tcp://192.168.1.8:24042"
-#define INTERNET "tcp://benternet.pxl-ea-ict.be:24042"
-#define MSG_PREFIX "LennyIndustries|LIES|"
+#define LOCALHOST(port) "tcp://localhost:" port
+#define LOCAL(port) "tcp://192.168.1.8:" port
+#define INTERNET(port) "tcp://benternet.pxl-ea-ict.be:" port
+#define MSG_PREFIX "LennyIndustries|LIES_Server|"
 #define FILTER_CHAR '|'
 #define PASSWD "LennyIndustriesAdmin" // Safety first ;p
 
@@ -51,11 +51,20 @@ int main(int argc, char **argv)
 	std::string logName = myInputHandler.getCmdOption("-log");
 	if (logName.empty()) // Default log name
 	{
-		logName = "LIES.log";
+		time_t now = time(nullptr); // https://www.tutorialspoint.com/cplusplus/cpp_date_time.htm
+		tm *ltm = localtime(&now);
+		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon) + "-" + std::to_string(ltm->tm_wday);
+		dateTime += "_" + std::to_string(ltm->tm_hour) + "-" + std::to_string(ltm->tm_min) + "-" + std::to_string(ltm->tm_sec);
+		std::cout << "Log name: LIES" << dateTime << ".log\n";
+		logName = "LIES" + dateTime + ".log";
+	}
+	else
+	{
+		std::cout << "Log name: " << logName << std::endl;
 	}
 	
 	// Starting log
-	auto *myLog = lilog::create(logName, true);
+	auto *myLog = lilog::create(logName, true, true);
 	LOG(myLog, 1, "Starting program");
 	
 	// Connecting benternet
@@ -65,20 +74,27 @@ int main(int argc, char **argv)
 		
 		//Incoming messages come in here
 		zmq::socket_t subscriber(context, ZMQ_SUB);
+		zmq::socket_t ventilator(context, ZMQ_PUSH);
 		if (myInputHandler.cmdOptionExists("-localhost"))
 		{
-			std::cout << "Connecting to: " << LOCALHOST << std::endl;
-			subscriber.connect(LOCALHOST);
+			LOG(myLog, 1, LOCALHOST("0"));
+			std::cout << "Connecting to: " << LOCALHOST("0") << std::endl;
+			subscriber.connect(LOCALHOST("24042"));
+			ventilator.connect(LOCALHOST("24041"));
 		}
 		else if (myInputHandler.cmdOptionExists("-local"))
 		{
-			std::cout << "Connecting to: " << LOCAL << std::endl;
-			subscriber.connect(LOCAL);
+			LOG(myLog, 1, LOCAL("0"));
+			std::cout << "Connecting to: " << LOCAL("0") << std::endl;
+			subscriber.connect(LOCAL("24042"));
+			ventilator.connect(LOCAL("24041"));
 		}
 		else if (myInputHandler.cmdOptionExists("-internet"))
 		{
-			std::cout << "Connecting to: " << INTERNET << std::endl;
-			subscriber.connect(INTERNET);
+			LOG(myLog, 1, INTERNET("0"));
+			std::cout << "Connecting to: " << INTERNET("0") << std::endl;
+			subscriber.connect(INTERNET("24042"));
+			ventilator.connect(INTERNET("24041"));
 		}
 		else
 		{
@@ -89,44 +105,56 @@ int main(int argc, char **argv)
 			return ERR_1;
 		}
 		
-		subscriber.setsockopt(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX)); // LennyIndustries|ProjectName|Function|Message
+		subscriber.set(zmq::sockopt::subscribe, MSG_PREFIX); // LennyIndustries|ProjectName|Function|Message
+//		subscriber.setsockopt(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX));
 		
 		auto *msg = new zmq::message_t();
 		std::string msgStr, function, message, subMsgStr;
 		std::size_t pos;
+		unsigned int uuid;
 		while (subscriber.handle() != nullptr)
 		{
 			subscriber.recv(msg);
-			std::cout << "Received size: " << msg->size() << std::endl;
+			LOG(myLog, 1, "Incoming message");
+			std::cout << "Incoming message\n";
+			
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 			
 			subMsgStr = msgStr.substr(strlen(MSG_PREFIX));
-//			std::cout << subMsgStr << std::endl;
 			pos = subMsgStr.find(FILTER_CHAR);
-//			std::cout << pos << std::endl;
 			
 			function = subMsgStr.substr(0, pos);
 			message = subMsgStr.substr(pos + 1);
 			
-			char str_f[function.length() + 1];
-			char str_m[message.length() + 1];
 			std::vector<char> functionVector(function.begin(), function.end());
 			std::vector<char> messageVector(message.begin(), message.end());
-			std::strcpy(str_f, function.c_str());
-			std::strcpy(str_m, message.c_str());
 			
-//			LOG(myLog, 1, "Received message; function: %s; message: %s.", str_f, str_m);
+			LOG(myLog, 1, "Function: %s", function.c_str());
+			std::cout << "Function: " << function << std::endl;
+			LOG(myLog, 1, "Size of received message: %i", msg->size());
+			std::cout << "Size of received message: " << msg->size() << std::endl;
 			
-//			std::cout << "Received message: " << msgStr << "\nFunction: " << function << "\nMessage: " << message << std::endl;
-			std::cout << "Size of received message: " << (strlen(MSG_PREFIX) + 1 + functionVector.size() + messageVector.size()) << std::endl;
-			
-			if ((function == "encrypt?") || ((function == "decrypt?")))
+			if ((function == "encrypt?") || (function == "decrypt?"))
 			{
-				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, 0);
+				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, myLog);
 			}
 			else if (function == "key?")
 			{
 				// Send the public key
+			}
+			else if (function == "uuid?")
+			{
+				// Send UUID
+			}
+			else if (function == "releaseUuid?")
+			{
+				// Release reserved uuid
+			}
+			else if (function == "ping?")
+			{
+				// Send pong
+				ventilator.send("LennyIndustries|LIES|pong!", 26);
+				ventilator.close();
 			}
 			else if (function == "exit")
 			{
@@ -135,6 +163,12 @@ int main(int argc, char **argv)
 					return ERR_R_EXIT;
 				}
 			}
+			else
+			{
+				std::cout << "Function unknown, ignoring message.\n";
+			}
+			
+			std::cout << "Done.\n";
 		}
 	}
 	catch (zmq::error_t &ex)
