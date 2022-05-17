@@ -7,7 +7,7 @@
 #include "include/encrypt.hpp"
 
 // Constructor (Public)
-encrypt::encrypt(std::vector <char> image, std::vector <char> message)
+encrypt::encrypt(std::vector<char> image, std::vector<char> message)
 {
 	this->inputImage = std::move(image);
 	this->text = std::move(message);
@@ -15,7 +15,7 @@ encrypt::encrypt(std::vector <char> image, std::vector <char> message)
 //	this->headerData = nullptr;
 //	this->imageData = nullptr;
 	
-	std::cout << "Encrypt created\n" << "inputImage = " << cryptLib::printableVector(this->inputImage) << "\ntext = " << cryptLib::printableVector(this->text) << std::endl;
+	std::cout << "Encrypt created\n" << "text = " << cryptLib::printableVector(this->text) << std::endl; // "inputImage = " << cryptLib::printableVector(this->inputImage) <<
 	encryptImage();
 }
 
@@ -25,7 +25,7 @@ void encrypt::encryptImage()
 {
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	
-	std::ofstream image ("outputImage.bmp", std::ios::out | std::ofstream::binary);
+	std::ofstream image("outputImage.bmp", std::ios::out | std::ofstream::binary);
 	
 	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator<char>(image));
 	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator<char>(image));
@@ -34,21 +34,23 @@ void encrypt::encryptImage()
 }
 
 // Getters / Setters
-void encrypt::setImage(std::vector <char> image)
+void encrypt::setImage(std::vector<char> image)
 {
 	this->inputImage = std::move(image);
 }
 
-void encrypt::setText(std::vector <char> message)
+void encrypt::setText(std::vector<char> message)
 {
 	this->text = std::move(message);
 }
 
-std::vector <char> encrypt::getImage()
+std::vector<char> encrypt::getImage()
 {
 	return returnImage;
 }
 
 // Protected
 // Private
-// Destructor (?)
+// Destructor (Public)
+encrypt::~encrypt()
+= default;

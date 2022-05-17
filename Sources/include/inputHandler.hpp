@@ -26,7 +26,7 @@ public:
 	[[nodiscard]] bool cmdOptionExists(const std::string &option) const;
 protected:
 private:
-	std::vector <std::string> tokens;
+	std::vector<std::string> tokens;
 };
 
 

@@ -22,12 +22,14 @@
 class cryptLib
 {
 public:
-	static std::string printableVector(const std::vector <char> &vectorToPrint);
-	static std::size_t vectorFind(const std::vector <char>& searchVector, char searchChar);
-	static std::vector <char> subVector(const std::vector <char>& startVector, std::size_t startPos, std::size_t charCount = std::string::npos);
-	static bool vectorCompare(const std::vector <char>& vector, const std::string& string);
+	// Functions
+	static std::string printableVector(const std::vector<char> &vectorToPrint);
+	static std::size_t vectorFind(const std::vector<char> &searchVector, char searchChar);
+	static std::vector<char> subVector(const std::vector<char> &startVector, std::size_t startPos, std::size_t charCount = std::string::npos);
+	static bool vectorCompare(const std::vector<char> &vector, const std::string &string);
 protected:
-	static void getImageData(std::vector <char> &image, std::vector <char> &headerReturn, std::vector <char> &dataReturn);
+	// Functions
+	static void getImageData(std::vector<char> &image, std::vector<char> &headerReturn, std::vector<char> &dataReturn);
 private:
 };
 

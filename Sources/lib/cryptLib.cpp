@@ -8,7 +8,7 @@
 
 // Constructor (?)
 // Public
-std::string cryptLib::printableVector(const std::vector <char> &vectorToPrint)
+std::string cryptLib::printableVector(const std::vector<char> &vectorToPrint)
 {
 	std::string returnString;
 	for (char i: vectorToPrint)
@@ -18,7 +18,7 @@ std::string cryptLib::printableVector(const std::vector <char> &vectorToPrint)
 	return returnString;
 }
 
-std::size_t cryptLib::vectorFind(const std::vector <char>& searchVector, char searchChar)
+std::size_t cryptLib::vectorFind(const std::vector<char> &searchVector, char searchChar)
 {
 	for (int i = 0; i < searchVector.size(); i++)
 	{
@@ -30,9 +30,9 @@ std::size_t cryptLib::vectorFind(const std::vector <char>& searchVector, char se
 	return std::string::npos;
 }
 
-std::vector <char> cryptLib::subVector(const std::vector <char>& startVector, std::size_t startPos, std::size_t charCount)
+std::vector<char> cryptLib::subVector(const std::vector<char> &startVector, std::size_t startPos, std::size_t charCount)
 {
-	std::vector <char> returnVector;
+	std::vector<char> returnVector;
 	if (startPos >= std::string::npos)
 	{
 		return returnVector;
@@ -46,7 +46,7 @@ std::vector <char> cryptLib::subVector(const std::vector <char>& startVector, st
 		}
 		return returnVector;
 	}
-
+	
 	for (std::size_t i = startPos; i < startPos + charCount; i++)
 	{
 		returnVector.push_back(startVector[i]);
@@ -55,22 +55,22 @@ std::vector <char> cryptLib::subVector(const std::vector <char>& startVector, st
 	return returnVector;
 }
 
-bool cryptLib::vectorCompare(const std::vector <char>& vector, const std::string& string)
+bool cryptLib::vectorCompare(const std::vector<char> &vector, const std::string &string)
 {
-	std::vector <char> tempVector(string.begin(), string.end());
+	std::vector<char> tempVector(string.begin(), string.end());
 	return (vector == tempVector);
 }
 
 // Protected
-void cryptLib::getImageData(std::vector <char> &image, std::vector <char> &headerReturn, std::vector <char> &dataReturn)
+void cryptLib::getImageData(std::vector<char> &image, std::vector<char> &headerReturn, std::vector<char> &dataReturn)
 {
-	std::vector <char> headerData;
+	std::vector<char> headerData;
 	int dataOffset = 0;
 	
 	headerData = {image.begin(), image.begin() + 54};
 	dataOffset = *(int *) &headerData[10];
 	headerData.clear();
-
+	
 	std::copy(image.begin(), image.begin() + dataOffset, std::back_inserter(headerReturn));
 	std::copy(image.begin() + dataOffset, image.end(), std::back_inserter(dataReturn));
 }

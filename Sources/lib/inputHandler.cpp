@@ -17,7 +17,7 @@ inputHandler::inputHandler(int &argc, char **argv)
 const std::string &inputHandler::getCmdOption(const std::string &option)
 const
 {
-	std::vector <std::string>::const_iterator itr;
+	std::vector<std::string>::const_iterator itr;
 	itr = std::find(this->tokens.begin(), this->tokens.end(), option);
 	if (itr != this->tokens.end() && ++itr != this->tokens.end())
 	{
