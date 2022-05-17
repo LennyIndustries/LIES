@@ -14,6 +14,7 @@
 // Libraries
 #include "encrypt.hpp"
 #include "decrypt.hpp"
+#include "include/lilog.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -30,33 +31,37 @@ class connectionHandler
 {
 public:
 	// Con- Destructor
-	static connectionHandler *create(std::vector <char> &function, std::vector <char> &message, unsigned int uuid);
+	static connectionHandler *create(std::vector<char> &function, std::vector<char> &message, lilog *log);
 	void kill();
 	// Getters / Setters
 	[[nodiscard]] unsigned int getUUID() const;
 protected:
 private:
 	// Con- Destructor
-	connectionHandler(std::vector <char> &function, const std::vector <char> &message, unsigned int uuid);
+	connectionHandler(std::vector<char> &function, const std::vector<char> &message, lilog *log);
 	~connectionHandler();
 	// Functions
 	void messageSolver();
 	// Variables
-	std::vector <char> function;
-	std::vector <char> message;
+	lilog *myLog;
+	
+	std::vector<char> function;
+	std::vector<char> message;
 	unsigned int uuid; // Unused, meant for multithreading
+
+//	char functionID;
+	std::vector<char> messageCommand;
+	std::vector<char> messageArgument;
 	
-	char functionID;
-	std::vector <char> messageCommand;
-	std::vector <char> messageArgument;
-	
-	std::vector <char> text;
-	std::vector <char> image;
+	std::vector<char> text;
+	std::vector<char> image;
 	int imageLength;
 //	char *text;
 //	char *image;
 	
-	std::string output;
+	bool error;
+
+//	std::string output;
 };
 
 
