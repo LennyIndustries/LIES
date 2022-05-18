@@ -27,11 +27,23 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 	LOG(myLog, 1, "Calling messageSolver");
 	messageSolver();
 	
-	if (this->text.empty() || this->image.empty())
+	if (cryptLib::vectorCompare(this->function, "encrypt"))
 	{
-		LOG(myLog, 2, "Failed to set text or image");
-		cryptLib::colorPrint("Failed to set text or image", ERRORCLR);
-		error = true;
+		if (this->text.empty() || this->image.empty())
+		{
+			LOG(myLog, 2, "Failed to set text or image");
+			cryptLib::colorPrint("Failed to set text or image", ERRORCLR);
+			error = true;
+		}
+	}
+	else if (cryptLib::vectorCompare(this->function, "decrypt"))
+	{
+		if (this->image.empty())
+		{
+			LOG(myLog, 2, "Failed to set text");
+			cryptLib::colorPrint("Failed to set text", ERRORCLR);
+			error = true;
+		}
 	}
 	else if ((this->image[0] != 'B') || (this->image[1] != 'M'))
 	{
@@ -52,10 +64,10 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 		cryptLib::colorPrint("A critical error occurred, aborting", ERRORCLR);
 		this->kill();
 	}
-	else if (cryptLib::printableVector(this->function) == "encrypt")
+	else if (cryptLib::vectorCompare(this->function, "encrypt"))
 	{
 		// Encrypt
-		encrypt myEncrypt = encrypt(this->image, this->text, myLog); // Send image and text to be encrypted
+		encrypt myEncrypt = encrypt(this->image, this->text, this->myLog); // Send image and text to be encrypted
 		this->image.clear(); // Clear current image
 		this->image = myEncrypt.getImage(); // Get encrypted image
 		// Prep for sending
@@ -68,11 +80,22 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 		this->myVent->send(sendVector.data(), sendVector.size());
 		this->kill();
 	}
-	else if (cryptLib::printableVector(this->function) == "decrypt")
+	else if (cryptLib::vectorCompare(this->function, "decrypt"))
 	{
 		// Decrypt
-		this->text.clear();
-		// Get text
+		decrypt myDecrypt = decrypt(this->image, this->myLog);
+		this->text.clear(); // Clear current text
+		this->text = myDecrypt.getText(); // Get decrypted text
+		// Prep for sending
+		std::vector <char> sendVector;
+		std::string msgPrefix = "LennyIndustries|LIES|" + std::to_string(this->uuid) + '|';
+		std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
+		sendVector.push_back(STX); // Start tag
+		std::copy(this->text.begin(), this->text.end(), std::back_inserter(sendVector)); // Copy text
+		sendVector.push_back(ETX); // End tag
+		LOG(myLog, 1, "Sending text back");
+		cryptLib::colorPrint("Sending text back", ALTMSGCLR);
+		this->myVent->send(sendVector.data(), sendVector.size());
 		this->kill();
 	}
 	else

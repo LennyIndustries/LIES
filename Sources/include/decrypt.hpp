@@ -12,13 +12,32 @@
 #define LIES_DECRYPT_HPP
 
 // Libraries
+#include "cryptLib.hpp"
+
+#include <vector>
+#include <utility>
+#include <fstream>
+
 // Definitions
 
-class decrypt
+class decrypt : private cryptLib
 {
 public:
+	// Con- Destructor
+	decrypt(std::vector <char> image, lilog *log);
+	~decrypt();
+	// Functions
+	void decryptImage();
+	// Getters / Setters
+	void setImage(std::vector <char> image);
+	std::vector <char> getText();
 protected:
 private:
+	// Variables
+	lilog *myLog;
+	std::vector <char> inputImage;
+	std::vector <char> returnText;
+	std::vector <char> headerData, imageData;
 };
 
 
