@@ -12,66 +12,82 @@
 #include "include/connectionHandler.hpp"
 
 // Constructor (Private)
-connectionHandler::connectionHandler(std::vector<char> &function, const std::vector<char> &message, lilog *log)
+connectionHandler::connectionHandler(std::vector <char> &function, const std::vector <char> &message, lilog *log, zmq::socket_t *vent)
 {
 	// Passed values
-	this->myLog = log;
 	this->function = function;
 	this->message = message;
+	this->myLog = log;
+	this->myVent = vent;
 	// Default values
 	this->error = false;
 	this->imageLength = 0;
 	this->uuid = 0;
 	
+	LOG(myLog, 1, "Calling messageSolver");
 	messageSolver();
 	
 	if (this->text.empty() || this->image.empty())
 	{
-		LOG(myLog, 2, "Failed to set text or image.");
-		std::cout << "Failed to set text or image.\n";
+		LOG(myLog, 2, "Failed to set text or image");
+		cryptLib::colorPrint("Failed to set text or image", ERRORCLR);
 		error = true;
 	}
 	else if ((this->image[0] != 'B') || (this->image[1] != 'M'))
 	{
-		LOG(myLog, 2, "BMP file error.");
-		std::cout << "BMP file error.\n";
+		LOG(myLog, 2, "BMP file error");
+		cryptLib::colorPrint("BMP file error", ERRORCLR);
+		error = true;
+	}
+	else if (this->uuid == 0)
+	{
+		LOG(myLog, 2, "UUID not set");
+		cryptLib::colorPrint("UUID not set", ERRORCLR);
 		error = true;
 	}
 	
 	if (this->error)
 	{
-		LOG(myLog, 3, "A critical error occurred, aborting.");
-		std::cout << "A critical error occurred, aborting.\n";
-		return;
+		LOG(myLog, 3, "A critical error occurred, aborting");
+		cryptLib::colorPrint("A critical error occurred, aborting", ERRORCLR);
+		this->kill();
 	}
-	else if (cryptLib::printableVector(this->function) == "encrypt?")
+	else if (cryptLib::printableVector(this->function) == "encrypt")
 	{
 		// Encrypt
-		encrypt myEncrypt = encrypt(this->image, this->text);
-		this->image.clear();
-		this->image = myEncrypt.getImage();
+		encrypt myEncrypt = encrypt(this->image, this->text, myLog); // Send image and text to be encrypted
+		this->image.clear(); // Clear current image
+		this->image = myEncrypt.getImage(); // Get encrypted image
+		// Prep for sending
+		std::vector <char> sendVector;
+		std::string msgPrefix = "LennyIndustries|LIES|" + std::to_string(this->uuid) + '|';
+		std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
+		std::copy(this->image.begin(), this->image.end(), std::back_inserter(sendVector)); // Copy image
+		LOG(myLog, 1, "Sending image back");
+		cryptLib::colorPrint("Sending image back", ALTMSGCLR);
+		this->myVent->send(sendVector.data(), sendVector.size());
+		this->kill();
 	}
-	else if (cryptLib::printableVector(this->function) == "decrypt?")
+	else if (cryptLib::printableVector(this->function) == "decrypt")
 	{
 		// Decrypt
 		this->text.clear();
 		// Get text
+		this->kill();
 	}
 	else
 	{
 		LOG(myLog, 3, "ERROR: Unknown function: %s", cryptLib::printableVector(function).c_str());
-		std::cout << "ERROR: Unknown function\n";
-		return;
+		cryptLib::colorPrint("ERROR: Unknown function: " + cryptLib::printableVector(function), ERRORCLR);
+		this->kill();
 	}
-	
-	// Send text and image back
 }
 
 // Public
 // "Constructor"
-connectionHandler *connectionHandler::create(std::vector<char> &function, std::vector<char> &message, lilog *log)
+connectionHandler *connectionHandler::create(std::vector <char> &function, std::vector <char> &message, lilog *log, zmq::socket_t *vent)
 {
-	return new connectionHandler(function, message, log);
+	return new connectionHandler(function, message, log, vent);
 }
 
 // "Destructor"
@@ -90,8 +106,8 @@ unsigned int connectionHandler::getUUID() const
 void connectionHandler::messageSolver()
 {
 	// Steps through possible functions and returns a number for them
-	std::vector<char> storage;
-	std::vector<char> rest;
+	std::vector <char> storage;
+	std::vector <char> rest;
 	std::size_t colonPosition = 0;
 	std::size_t equalsPosition;
 	
@@ -100,7 +116,6 @@ void connectionHandler::messageSolver()
 	while (colonPosition != std::string::npos)
 	{
 		colonPosition = cryptLib::vectorFind(rest, ':');
-		LOG(myLog, 1, "Found ':' at: %i", colonPosition);
 		std::cout << "Found ':' at: " << colonPosition << std::endl;
 		
 		if (colonPosition != std::string::npos)
@@ -116,7 +131,6 @@ void connectionHandler::messageSolver()
 		
 		// Set command & argument
 		equalsPosition = cryptLib::vectorFind(storage, '=');
-		LOG(myLog, 1, "Found '=' at: %i", equalsPosition);
 		std::cout << "Found '=' at: " << equalsPosition << std::endl;
 		if (equalsPosition != std::string::npos)
 		{
@@ -130,10 +144,8 @@ void connectionHandler::messageSolver()
 		// Filter command & argument
 		if ((cryptLib::vectorCompare(this->messageCommand, "image")) && (equalsPosition != std::string::npos) && (this->imageLength > 0))
 		{
-			LOG(myLog, 1, "Command: Image");
-			LOG(myLog, 1, "Image length: %i", this->imageLength);
-			std::cout << "Command: Image\nImage length: " << this->imageLength << std::endl;
-			std::vector<char> tempRestVector;
+			cryptLib::colorPrint("Command: Image\nImage length: " + std::to_string(this->imageLength), MSGCLR);
+			std::vector <char> tempRestVector;
 			if (!rest.empty()) // If there is something left add it back to storage
 			{
 				tempRestVector.clear();
@@ -146,13 +158,13 @@ void connectionHandler::messageSolver()
 			
 			if (this->imageLength != cryptLib::subVector(storage, equalsPosition + 1).size())
 			{
-				LOG(myLog, 2, "CRITICAL ERROR : image length does not match vector length!");
-				std::cout << "CRITICAL ERROR : image length does not match vector length!\n" << this->imageLength << " != " << cryptLib::subVector(storage, equalsPosition + 1).size() << std::endl;
+				LOG(myLog, 2, "CRITICAL ERROR : image length does not match vector length");
+				cryptLib::colorPrint("CRITICAL ERROR : image length does not match vector length", ERRORCLR);
 				this->error = true;
 				return; // Do something to stop the program from continuing.
 			}
 			
-			std::vector<char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->imageLength);
+			std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->imageLength);
 			std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->image));
 			
 			tempRestVector.clear();
@@ -160,25 +172,20 @@ void connectionHandler::messageSolver()
 			rest.clear();
 			if (!tempRestVector.empty())
 			{
-				LOG(myLog, 1, "Rest not empty");
 				std::cout << "Rest not empty\n";
 				std::copy(tempRestVector.begin(), tempRestVector.end(), std::back_inserter(rest));
 			}
 			else
 			{
-				LOG(myLog, 1, "Rest empty");
 				std::cout << "Rest empty\n";
 				return;
 			}
 		}
 		else if ((cryptLib::vectorCompare(this->messageCommand, "text")) && (equalsPosition != std::string::npos))
 		{
-			LOG(myLog, 1, "Command: Text");
-			std::cout << "Command: Text\n";
-			std::size_t startOfTextPosition = cryptLib::vectorFind(this->message, char(STX));
-			std::size_t endOfTextPosition = cryptLib::vectorFind(this->message, char(ETX));
-			LOG(myLog, 1, "startOfTextPosition: %i", startOfTextPosition);
-			LOG(myLog, 1, "endOfTextPosition: %i", endOfTextPosition);
+			cryptLib::colorPrint("Command: Text", MSGCLR);
+			std::size_t startOfTextPosition = cryptLib::vectorFind(this->message, STX);
+			std::size_t endOfTextPosition = cryptLib::vectorFind(this->message, ETX);
 			std::cout << "startOfTextPosition: " << startOfTextPosition << "\nendOfTextPosition: " << endOfTextPosition << std::endl;
 			
 			if ((startOfTextPosition != std::string::npos) && (endOfTextPosition != std::string::npos))
@@ -190,15 +197,14 @@ void connectionHandler::messageSolver()
 			else
 			{
 				LOG(myLog, 2, "Failed to fetch message");
-				std::cout << "Failed to fetch message\n";
+				cryptLib::colorPrint("Failed to fetch message", ERRORCLR);
 			}
 		}
 		else if ((cryptLib::vectorCompare(this->messageCommand, "imageLength")) && (this->imageLength == 0))
 		{
-			LOG(myLog, 1, "Command: Image length");
-			std::cout << "Command: Image length\n";
+			cryptLib::colorPrint("Command: Image length", MSGCLR);
 //			int tmpInt  = 0;
-			std::vector<char> tmpVector;
+			std::vector <char> tmpVector;
 			
 			tmpVector.clear();
 			tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -209,27 +215,24 @@ void connectionHandler::messageSolver()
 //			}
 //			this->imageLength = tmpInt;
 			this->imageLength = std::stoi(cryptLib::printableVector(tmpVector));
-			LOG(myLog, 1, "Image length: %i", this->imageLength);
 			std::cout << "Image length: " << this->imageLength << std::endl;
 		}
 		else if (cryptLib::vectorCompare(this->messageCommand, "uuid"))
 		{
-			LOG(myLog, 1, "Command: UUID");
-			std::cout << "Command: UUID\n";
+			cryptLib::colorPrint("Command: UUID", MSGCLR);
 			
-			std::vector<char> tmpVector;
+			std::vector <char> tmpVector;
 			
 			tmpVector.clear();
 			tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
 			
 			this->uuid = std::stoi(cryptLib::printableVector(tmpVector));
-			LOG(myLog, 1, "UUID: %i", this->uuid);
 			std::cout << "UUID: " << this->uuid << std::endl;
 		}
 		else
 		{
 			LOG(myLog, 2, "ERROR: Command not found, not complete or already set: %s", cryptLib::printableVector(this->messageCommand).c_str());
-			std::cout << "ERROR: Command not found, not complete or already set: " << cryptLib::printableVector(this->messageCommand) << std::endl;
+			cryptLib::colorPrint("ERROR: Command not found, not complete or already set: " + cryptLib::printableVector(this->messageCommand), ERRORCLR);
 		}
 	}
 }
