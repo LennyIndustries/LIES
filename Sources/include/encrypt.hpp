@@ -24,20 +24,21 @@ class encrypt : private cryptLib
 {
 public:
 	// Con- Destructor
-	encrypt(std::vector<char> image, std::vector<char> message);
+	encrypt(std::vector <char> image, std::vector <char> message, lilog *log);
 	~encrypt();
 	// Functions
 	void encryptImage();
 	// Getters / Setters
-	void setImage(std::vector<char> image);
-	void setText(std::vector<char> message);
-	std::vector<char> getImage();
+	void setImage(std::vector <char> image);
+	void setText(std::vector <char> message);
+	std::vector <char> getImage();
 protected:
 private:
 	// Variables
-	std::vector<char> inputImage, returnImage;
-	std::vector<char> text;
-	std::vector<char> headerData, imageData;
+	lilog *myLog;
+	std::vector <char> inputImage, returnImage;
+	std::vector <char> text;
+	std::vector <char> headerData, imageData;
 };
 
 
