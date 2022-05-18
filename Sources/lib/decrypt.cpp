@@ -33,7 +33,7 @@ void decrypt::decryptImage()
 //	int dataOffset = *(int*) &this->headerData[10];
 	int with = *(int *) &this->headerData[18];
 	int height = *(int *) &this->headerData[22];
-	int bitPerPixel = *(int *) &this->headerData[28];
+	int bitPerPixel = *(short int *) &this->headerData[28];
 	// with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS
 	int maxChars = (with * height * bitPerPixel);
 //	std::cout << "Image file size = " << imageFileSize << std::endl;
@@ -42,7 +42,7 @@ void decrypt::decryptImage()
 	std::cout << "With = " << with << std::endl;
 	std::cout << "Height = " << height << std::endl;
 	std::cout << "Bit per pixel = " << bitPerPixel << std::endl;
-	std::cout << "Maximum characters in image = " << maxChars << std::endl;
+	std::cout << "Total bits in image = " << maxChars << std::endl;
 	// Checking image compatibility
 	if (reserved != ENCRYPTED) // The image has not been encrypted by LIES
 	{

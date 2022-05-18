@@ -25,8 +25,6 @@
 #include <zmq.hpp>
 
 // Definitions
-#define STX 0x2 // STX (Start Of Text) :: 0000 0010 :: 2
-#define ETX 0x3 // ETX (End Of Text) :: 0000 0011 :: 3
 
 class connectionHandler
 {
@@ -42,7 +40,14 @@ private:
 	connectionHandler(std::vector <char> &function, const std::vector <char> &message, lilog *log, zmq::socket_t *vent);
 	~connectionHandler();
 	// Functions
+	void handle();
 	void messageSolver();
+	bool handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	void handleText(std::vector <char> &storage, std::vector <char> &rest);
+	void handleImageLength(std::vector <char> &storage, size_t &equalsPosition);
+	void handleUuid(std::vector <char> &storage, size_t &equalsPosition);
+	void encryptCall();
+	void decryptCall();
 	// Variables
 	lilog *myLog;
 	zmq::socket_t *myVent;

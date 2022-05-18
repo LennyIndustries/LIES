@@ -34,7 +34,7 @@ void encrypt::encryptImage()
 //	int dataOffset = *(int*) &this->headerData[10];
 	int with = *(int *) &this->headerData[18];
 	int height = *(int *) &this->headerData[22];
-	int bitPerPixel = *(int *) &this->headerData[28];
+	int bitPerPixel = *(short int *) &this->headerData[28];
 	// with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS; / 8 = TOTAL BYTES; / 8 = MAX CHARS IN IMAGE (8 bytes per char)
 	int maxChars = ((with * height * bitPerPixel) / 8) / 8;
 //	std::cout << "Image file size = " << imageFileSize << std::endl;
