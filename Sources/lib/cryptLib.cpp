@@ -8,7 +8,7 @@
 
 // Constructor (?)
 // Public
-std::string cryptLib::printableVector(const std::vector<char> &vectorToPrint)
+std::string cryptLib::printableVector(const std::vector <char> &vectorToPrint)
 {
 	std::string returnString;
 	for (char i: vectorToPrint)
@@ -18,7 +18,7 @@ std::string cryptLib::printableVector(const std::vector<char> &vectorToPrint)
 	return returnString;
 }
 
-std::size_t cryptLib::vectorFind(const std::vector<char> &searchVector, char searchChar)
+std::size_t cryptLib::vectorFind(const std::vector <char> &searchVector, char searchChar)
 {
 	for (int i = 0; i < searchVector.size(); i++)
 	{
@@ -30,9 +30,9 @@ std::size_t cryptLib::vectorFind(const std::vector<char> &searchVector, char sea
 	return std::string::npos;
 }
 
-std::vector<char> cryptLib::subVector(const std::vector<char> &startVector, std::size_t startPos, std::size_t charCount)
+std::vector <char> cryptLib::subVector(const std::vector <char> &startVector, std::size_t startPos, std::size_t charCount)
 {
-	std::vector<char> returnVector;
+	std::vector <char> returnVector;
 	if (startPos >= std::string::npos)
 	{
 		return returnVector;
@@ -55,16 +55,24 @@ std::vector<char> cryptLib::subVector(const std::vector<char> &startVector, std:
 	return returnVector;
 }
 
-bool cryptLib::vectorCompare(const std::vector<char> &vector, const std::string &string)
+bool cryptLib::vectorCompare(const std::vector <char> &vector, const std::string &string)
 {
-	std::vector<char> tempVector(string.begin(), string.end());
+	std::vector <char> tempVector(string.begin(), string.end());
 	return (vector == tempVector);
 }
 
-// Protected
-void cryptLib::getImageData(std::vector<char> &image, std::vector<char> &headerReturn, std::vector<char> &dataReturn)
+void cryptLib::colorPrint(const std::string &message, char color)
 {
-	std::vector<char> headerData;
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, color);
+	std::cout << message << std::endl;
+	SetConsoleTextAttribute(hConsole, DEFAULTCLR);
+}
+
+// Protected
+void cryptLib::getImageData(std::vector <char> &image, std::vector <char> &headerReturn, std::vector <char> &dataReturn)
+{
+	std::vector <char> headerData;
 	int dataOffset = 0;
 	
 	headerData = {image.begin(), image.begin() + 54};

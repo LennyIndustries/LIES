@@ -45,6 +45,7 @@
 
 int main(int argc, char **argv)
 {
+	cryptLib::colorPrint("Starting LIES server", DEFAULTCLR);
 	// Input Arguments
 	inputHandler myInputHandler(argc, argv);
 	
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 	
 	// Starting log
 	auto *myLog = lilog::create(logName, true, true);
-	LOG(myLog, 1, "Starting program");
+	LOG(myLog, 1, "Starting LIES server");
 	
 	// Connecting benternet
 	try
@@ -78,30 +79,33 @@ int main(int argc, char **argv)
 		if (myInputHandler.cmdOptionExists("-localhost"))
 		{
 			LOG(myLog, 1, LOCALHOST("0"));
-			std::cout << "Connecting to: " << LOCALHOST("0") << std::endl;
+			cryptLib::colorPrint(std::string() + "Connecting to: " + LOCALHOST("0"), MSGCLR);
 			subscriber.connect(LOCALHOST("24042"));
 			ventilator.connect(LOCALHOST("24041"));
 		}
 		else if (myInputHandler.cmdOptionExists("-local"))
 		{
 			LOG(myLog, 1, LOCAL("0"));
-			std::cout << "Connecting to: " << LOCAL("0") << std::endl;
+			cryptLib::colorPrint(std::string() + "Connecting to: " + LOCAL("0"), MSGCLR);
 			subscriber.connect(LOCAL("24042"));
 			ventilator.connect(LOCAL("24041"));
 		}
 		else if (myInputHandler.cmdOptionExists("-internet"))
 		{
 			LOG(myLog, 1, INTERNET("0"));
-			std::cout << "Connecting to: " << INTERNET("0") << std::endl;
+			cryptLib::colorPrint(std::string() + "Connecting to: " + INTERNET("0"), MSGCLR);
 			subscriber.connect(INTERNET("24042"));
 			ventilator.connect(INTERNET("24041"));
 		}
 		else
 		{
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, ERRORCLR);
 			LOG(myLog, 3, "Invalid network option");
-			std::cout << "No valid network option given.\n";
+			std::cout << "No valid network option given\n";
 			std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n";
 			std::cout << "'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
+			SetConsoleTextAttribute(hConsole, 0x7);
 			return ERR_1;
 		}
 		
@@ -116,7 +120,7 @@ int main(int argc, char **argv)
 		{
 			subscriber.recv(msg);
 			LOG(myLog, 1, "Incoming message");
-			std::cout << "Incoming message\n";
+			cryptLib::colorPrint("Incoming message", MSGCLR);
 			
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 			
@@ -126,35 +130,34 @@ int main(int argc, char **argv)
 			function = subMsgStr.substr(0, pos);
 			message = subMsgStr.substr(pos + 1);
 			
-			std::vector<char> functionVector(function.begin(), function.end());
-			std::vector<char> messageVector(message.begin(), message.end());
+			std::vector <char> functionVector(function.begin(), function.end());
+			std::vector <char> messageVector(message.begin(), message.end());
 			
 			LOG(myLog, 1, "Function: %s", function.c_str());
-			std::cout << "Function: " << function << std::endl;
+			cryptLib::colorPrint(std::string() + "Function: " + function, ALTMSGCLR);
 			LOG(myLog, 1, "Size of received message: %i", msg->size());
-			std::cout << "Size of received message: " << msg->size() << std::endl;
+			cryptLib::colorPrint("Size of received message: " + std::to_string(msg->size()), ALTMSGCLR);
 			
-			if ((function == "encrypt?") || (function == "decrypt?"))
+			if ((function == "encrypt") || (function == "decrypt"))
 			{
-				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, myLog);
+				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, myLog, &ventilator);
 			}
-			else if (function == "key?")
+			else if (function == "key")
 			{
 				// Send the public key
 			}
-			else if (function == "uuid?")
+			else if (function == "uuid")
 			{
 				// Send UUID
 			}
-			else if (function == "releaseUuid?")
+			else if (function == "freeUuid")
 			{
 				// Release reserved uuid
 			}
-			else if (function == "ping?")
+			else if (function == "ping")
 			{
 				// Send pong
-				ventilator.send("LennyIndustries|LIES|pong!", 26);
-				ventilator.close();
+				ventilator.send("LennyIndustries|LIES|pong", 25);
 			}
 			else if (function == "exit")
 			{
@@ -165,10 +168,10 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				std::cout << "Function unknown, ignoring message.\n";
+				cryptLib::colorPrint("Function unknown, ignoring message", ERRORCLR);
 			}
 			
-			std::cout << "Done.\n";
+			cryptLib::colorPrint("Done", MSGCLR);
 		}
 	}
 	catch (zmq::error_t &ex)

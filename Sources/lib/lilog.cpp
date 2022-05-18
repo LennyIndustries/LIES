@@ -16,17 +16,17 @@ lilog::lilog(const std::string &logFile, bool createBackup, bool clear)
 		struct stat buffer{};
 		if (stat(logFile.c_str(), &buffer) == 0) // Create a backup of the old log file
 		{
-			std::cout << "Creating backup of old log file.\n";
+			std::cout << "Creating backup of old log file\n";
 			std::string tmpLogName = logFile.substr(0, logFile.find('.'));
 			tmpLogName += "_old.log";
 			std::cout << tmpLogName << std::endl;
 			if (remove(tmpLogName.c_str()) != 0)
 			{
-				std::cout << "Failed to delete.\n";
+				std::cout << "Failed to delete\n";
 			}
 			if (rename(logFile.c_str(), tmpLogName.c_str()) != 0)
 			{
-				std::cout << "Failed to rename.\n";
+				std::cout << "Failed to rename\n";
 			}
 		}
 	}
@@ -44,7 +44,7 @@ lilog *lilog::create(const std::string &logFile, bool createBackup, bool clear)
 // "Destructor"
 void lilog::kill()
 {
-	log(1, __FILE__, __LINE__, "Killing log file.");
+	log(1, __FILE__, __LINE__, "Killing log file");
 	delete this;
 }
 
@@ -70,7 +70,7 @@ bool lilog::log(char logLevel, std::string file, unsigned int line, const char *
 			logLevelString = "CRIT";
 			break;
 		default:
-			lilog::log(2, std::move(file), line, "Could not resolve log level: %i.", logLevel);
+			lilog::log(2, std::move(file), line, "Could not resolve log level: %i", logLevel);
 			return false;
 	}
 	
@@ -97,7 +97,7 @@ void lilog::clearLogFile()
 	this->myStream.open(this->logFile, std::ofstream::out | std::ofstream::trunc);
 	this->myStream.close();
 	this->open();
-	log(1, __FILE__, __LINE__, "Log file cleared.");
+	log(1, __FILE__, __LINE__, "Log file cleared");
 }
 
 void lilog::open()
@@ -105,16 +105,16 @@ void lilog::open()
 	this->myStream.open(this->logFile, std::ofstream::out | std::ofstream::app);
 	if (!this->myStream.is_open())
 	{
-		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\n";
+		std::cerr << "-!!!- CRITICAL ERROR -!!!-\nCan not open log file\n";
 		this->kill();
 		return;
 	}
-	log(1, __FILE__, __LINE__, "Opening log file.");
+	log(1, __FILE__, __LINE__, "Opening log file");
 }
 
 void lilog::close()
 {
-	log(1, __FILE__, __LINE__, "Closing log file.");
+	log(1, __FILE__, __LINE__, "Closing log file");
 	this->myStream.close();
 }
 
