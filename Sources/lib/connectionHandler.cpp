@@ -178,6 +178,10 @@ bool connectionHandler::messageSolver()
 			if (!handleUuid(storage, equalsPosition))
 				return false;
 		}
+		else if ((colonPosition == std::string::npos) && (equalsPosition == std::string::npos))
+		{
+			return true;
+		}
 		else
 		{
 			LOG(this->myLog, 2, "ERROR: Command not found, not complete or already set: %s", cryptLib::printableVector(this->messageCommand).c_str());
@@ -223,7 +227,7 @@ bool connectionHandler::handleImage(std::vector <char> &storage, std::vector <ch
 	else
 	{
 		std::cout << "Rest empty\n";
-		return false;
+		return true;
 	}
 	return true;
 }

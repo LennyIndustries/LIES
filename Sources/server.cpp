@@ -29,6 +29,9 @@
 #include <QtCore/qglobal.h>
 #include <zmq.hpp>
 #include <botan/uuid.h>
+#include <botan/rng.h>
+#include <botan/auto_rng.h>
+#include <botan/botan.h>
 
 // Definitions
 #define LOCALHOST(port) "tcp://localhost:" port
@@ -111,7 +114,7 @@ int main(int argc, char **argv)
 		auto *msg = new zmq::message_t();
 		std::string msgStr, function, message, subMsgStr;
 		std::size_t pos;
-		unsigned int uuid;
+//		unsigned int uuid;
 		while (subscriber.handle() != nullptr)
 		{
 			subscriber.recv(msg);
@@ -145,6 +148,10 @@ int main(int argc, char **argv)
 			else if (function == "uuid")
 			{
 				// Send UUID
+				Botan::AutoSeeded_RNG rng;
+				Botan::UUID uuid = Botan::UUID(rng);
+				std::cout << uuid.to_string() << std::endl;
+				ventilator.send("LennyIndustries|LIES|1", 22);
 			}
 			else if (function == "freeUuid")
 			{
