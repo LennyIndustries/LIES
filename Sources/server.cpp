@@ -56,13 +56,9 @@ int main(int argc, char **argv)
 		tm *ltm = localtime(&now);
 		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon) + "-" + std::to_string(ltm->tm_wday);
 		dateTime += "_" + std::to_string(ltm->tm_hour) + "-" + std::to_string(ltm->tm_min) + "-" + std::to_string(ltm->tm_sec);
-		std::cout << "Log name: LIES" << dateTime << ".log\n";
 		logName = "LIES" + dateTime + ".log";
 	}
-	else
-	{
-		std::cout << "Log name: " << logName << std::endl;
-	}
+	std::cout << "Log name: " << logName << std::endl;
 	
 	// Starting log
 	auto *myLog = lilog::create(logName, true, true);
@@ -179,5 +175,13 @@ int main(int argc, char **argv)
 		std::cerr << "Caught an exception : " << ex.what();
 	}
 	
+	// Halting server
+	LOG(myLog, 3, "Halting server");
+	cryptLib::colorPrint(std::string() + "Halting server", ALTMSGCLR);
+	// Resetting color & killing log
+	myLog->kill();
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 0x7);
+	// Stop
 	return ERR_0;
 }
