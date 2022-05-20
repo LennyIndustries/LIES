@@ -2,14 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
-find_package(BOTAN REQUIRED)
-
-#include(cmake/app_utils.cmake)
-#setup_vcpkg_before_project()
-
-#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR/cmake}")
-#find_package(Botan REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+find_package(Botan REQUIRED)
 
 # ZMQ Stuff
 add_compile_definitions(ZMQ_STATIC)
@@ -72,7 +66,7 @@ message("PROJECT_LIBS=" ${ALL_LIBS})
 
 add_executable(${PROJECT_NAME} ${project_sources} ${project_headers})
 
-target_link_libraries(${PROJECT_NAME} ${ALL_LIBS})
+target_link_libraries(${PROJECT_NAME} ${ALL_LIBS} PRIVATE Botan::Botan)
 
 # Project 2 - Client
 project(client)
