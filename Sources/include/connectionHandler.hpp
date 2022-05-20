@@ -41,11 +41,11 @@ private:
 	~connectionHandler();
 	// Functions
 	void handle();
-	void messageSolver();
+	bool messageSolver();
 	bool handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
-	void handleText(std::vector <char> &storage, std::vector <char> &rest);
-	void handleImageLength(std::vector <char> &storage, size_t &equalsPosition);
-	void handleUuid(std::vector <char> &storage, size_t &equalsPosition);
+	bool handleText(std::vector <char> &storage, std::vector <char> &rest);
+	bool handleImageLength(std::vector <char> &storage, size_t &equalsPosition);
+	bool handleUuid(std::vector <char> &storage, size_t &equalsPosition);
 	void encryptCall();
 	void decryptCall();
 	// Variables
