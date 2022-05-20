@@ -96,8 +96,8 @@ void lilog::clearLogFile()
 		this->close();
 	this->myStream.open(this->logFile, std::ofstream::out | std::ofstream::trunc);
 	this->myStream.close();
-	this->open();
 	log(1, __FILE__, __LINE__, "Log file cleared");
+	this->open();
 }
 
 void lilog::open()

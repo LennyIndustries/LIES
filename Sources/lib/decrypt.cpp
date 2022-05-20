@@ -11,9 +11,6 @@ decrypt::decrypt(std::vector <char> image, lilog *log)
 {
 	this->myLog = log;
 	this->inputImage = std::move(image);
-//	this->returnImage = nullptr;
-//	this->headerData = nullptr;
-//	this->imageData = nullptr;
 	
 	LOG(myLog, 1, "Decrypt created");
 	std::cout << "Decrypt created\n";
@@ -28,17 +25,13 @@ void decrypt::decryptImage()
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	// Get info from header
 	// http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm
-//	int imageFileSize = *(int*) &this->headerData[2];
 	int reserved = *(int *) &this->headerData[6];
-//	int dataOffset = *(int*) &this->headerData[10];
 	int with = *(int *) &this->headerData[18];
 	int height = *(int *) &this->headerData[22];
 	int bitPerPixel = *(short int *) &this->headerData[28];
 	// with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS
 	int maxChars = (with * height * bitPerPixel);
-//	std::cout << "Image file size = " << imageFileSize << std::endl;
 	std::cout << "Reserved = " << reserved << std::endl;
-//	std::cout << "Data offset = " << dataOffset << std::endl;
 	std::cout << "With = " << with << std::endl;
 	std::cout << "Height = " << height << std::endl;
 	std::cout << "Bit per pixel = " << bitPerPixel << std::endl;
