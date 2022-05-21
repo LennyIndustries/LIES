@@ -5,10 +5,10 @@
 * Build configuration for Botan 2.19.1
 *
 * Automatically generated from
-* 'configure.py --cc=gcc --os=mingw --disable-shared --prefix=C:/botan_build/'
+* 'configure.py --prefix=D:/Botan_build --cc=gcc --os=mingw --cpu=x86_64 --link-method hardlink'
 *
 * Target
-*  - Compiler: g++ -pthread -std=c++11 -D_REENTRANT -O3
+*  - Compiler: g++ -m64 -pthread -std=c++11 -D_REENTRANT -O3
 *  - Arch: x86_64
 *  - OS: mingw
 */
@@ -16,12 +16,12 @@
 #define BOTAN_VERSION_MAJOR 2
 #define BOTAN_VERSION_MINOR 19
 #define BOTAN_VERSION_PATCH 1
-#define BOTAN_VERSION_DATESTAMP 0
+#define BOTAN_VERSION_DATESTAMP 20220121
 
 
-#define BOTAN_VERSION_RELEASE_TYPE "unreleased"
+#define BOTAN_VERSION_RELEASE_TYPE "release"
 
-#define BOTAN_VERSION_VC_REVISION "unknown"
+#define BOTAN_VERSION_VC_REVISION "git:fe62c1f5ce6c4379a52bd018c2ff68bed3024c4d"
 
 #define BOTAN_DISTRIBUTION_INFO "unspecified"
 
@@ -29,11 +29,11 @@
 #define BOTAN_MP_WORD_BITS 64
 
 
-#define BOTAN_INSTALL_PREFIX R"(C:/botan_build/)"
-#define BOTAN_INSTALL_HEADER_DIR R"(include/botan)"
-#define BOTAN_INSTALL_LIB_DIR R"(C:/botan_build/lib)"
+#define BOTAN_INSTALL_PREFIX R"(D:/Botan_build)"
+#define BOTAN_INSTALL_HEADER_DIR R"(include/botan-2)"
+#define BOTAN_INSTALL_LIB_DIR R"(D:/Botan_build\lib)"
 #define BOTAN_LIB_LINK "-lcrypt32 -lws2_32"
-#define BOTAN_LINK_FLAGS "-pthread"
+#define BOTAN_LINK_FLAGS "-m64 -pthread"
 
 
 #ifndef BOTAN_DLL

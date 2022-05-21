@@ -22,7 +22,6 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 	// Default values
 	this->error = false;
 	this->imageLength = 0;
-	this->uuid = 0;
 	
 	LOG(this->myLog, 1, "Calling handle");
 	handle();
@@ -41,7 +40,7 @@ void connectionHandler::kill()
 	delete this;
 }
 
-unsigned int connectionHandler::getUUID() const
+Botan::UUID connectionHandler::getUUID() const
 {
 	return this->uuid;
 }
@@ -81,10 +80,16 @@ void connectionHandler::handle()
 		cryptLib::colorPrint("BMP file error", ERRORCLR);
 		this->error = true;
 	}
-	if (this->uuid == 0)
+	if (this->uuid.to_string().empty())
 	{
 		LOG(this->myLog, 2, "UUID not set");
 		cryptLib::colorPrint("UUID not set", ERRORCLR);
+		this->error = true;
+	}
+	if (!this->uuid.is_valid())
+	{
+		LOG(this->myLog, 2, "UUID not valid");
+		cryptLib::colorPrint("UUID not valid", ERRORCLR);
 		this->error = true;
 	}
 	
@@ -283,7 +288,7 @@ bool connectionHandler::handleUuid(std::vector <char> &storage, size_t &equalsPo
 	
 	try
 	{
-		this->uuid = std::stoi(cryptLib::printableVector(tmpVector));
+		this->uuid = Botan::UUID(cryptLib::printableVector(tmpVector));
 	}
 	catch (const std::exception &e)
 	{
@@ -291,7 +296,7 @@ bool connectionHandler::handleUuid(std::vector <char> &storage, size_t &equalsPo
 		cryptLib::colorPrint(e.what(), ERRORCLR);
 		return false;
 	}
-	std::cout << "UUID: " << this->uuid << std::endl;
+	std::cout << "UUID: " << this->uuid.to_string() << std::endl;
 	return true;
 }
 
@@ -302,7 +307,7 @@ void connectionHandler::encryptCall()
 	this->image = myEncrypt.getImage(); // Get encrypted image
 	// Prep for sending
 	std::vector <char> sendVector;
-	std::string msgPrefix = "LennyIndustries|LIES|" + std::to_string(this->uuid) + '|';
+	std::string msgPrefix = "LennyIndustries|LIES_Client_" + this->uuid.to_string() + '|';
 	std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
 	std::copy(this->image.begin(), this->image.end(), std::back_inserter(sendVector)); // Copy image
 	LOG(this->myLog, 1, "Sending image back");
@@ -317,7 +322,7 @@ void connectionHandler::decryptCall()
 	this->text = myDecrypt.getText(); // Get decrypted text
 	// Prep for sending
 	std::vector <char> sendVector;
-	std::string msgPrefix = "LennyIndustries|LIES|" + std::to_string(this->uuid) + '|';
+	std::string msgPrefix = "LennyIndustries|LIES_Client_" + this->uuid.to_string() + '|';
 	std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
 	sendVector.push_back(STX); // Start tag
 	std::copy(this->text.begin(), this->text.end(), std::back_inserter(sendVector)); // Copy text

@@ -33,7 +33,7 @@ public:
 	static connectionHandler *create(std::vector <char> &function, std::vector <char> &message, lilog *log, zmq::socket_t *vent);
 	void kill();
 	// Getters / Setters
-	[[nodiscard]] unsigned int getUUID() const;
+	[[nodiscard]] Botan::UUID getUUID() const;
 protected:
 private:
 	// Con- Destructor
@@ -54,7 +54,7 @@ private:
 	
 	std::vector <char> function;
 	std::vector <char> message;
-	unsigned int uuid; // Unused, meant for multithreading
+	Botan::UUID uuid; // Unused, meant for multithreading
 
 //	char functionID;
 	std::vector <char> messageCommand;

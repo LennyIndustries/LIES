@@ -24,14 +24,7 @@
 #include "include/connectionHandler.hpp"
 
 #include <cstdio>
-#include <openssl/opensslv.h>
-#include <botan/botan.h>
-#include <QtCore/qglobal.h>
 #include <zmq.hpp>
-#include <botan/uuid.h>
-#include <botan/rng.h>
-#include <botan/auto_rng.h>
-#include <botan/botan.h>
 
 // Definitions
 #define LOCALHOST(port) "tcp://localhost:" port
@@ -143,24 +136,27 @@ int main(int argc, char **argv)
 			}
 			else if (function == "key")
 			{
-				// Send the public key
+				// Send the public key LennyIndustries|LIES_Key|
 			}
 			else if (function == "uuid")
 			{
 				// Send UUID
-				Botan::AutoSeeded_RNG rng;
-				Botan::UUID uuid = Botan::UUID(rng);
-				std::cout << uuid.to_string() << std::endl;
-				ventilator.send("LennyIndustries|LIES|1", 22);
-			}
-			else if (function == "freeUuid")
-			{
-				// Release reserved uuid
+				Botan::UUID uuid;
+				do
+				{
+					Botan::AutoSeeded_RNG rng;
+					uuid = Botan::UUID(rng);
+					std::cout << "New UUID: " << uuid.to_string() << std::endl;
+				} while (!uuid.is_valid());
+				std::string returnString = "LennyIndustries|LIES_UUID|" + uuid.to_string();
+				LOG(myLog, 1, "Sending UUID back: %s", uuid.to_string().c_str());
+				cryptLib::colorPrint("Sending UUID back", ALTMSGCLR);
+				ventilator.send(returnString.c_str(), returnString.length());
 			}
 			else if (function == "ping")
 			{
 				// Send pong
-				ventilator.send("LennyIndustries|LIES|pong", 25);
+				ventilator.send("LennyIndustries|LIES_Pong", 25);
 			}
 			else if (function == "exit")
 			{

@@ -19,6 +19,8 @@
 #include <cstring>
 #include <vector>
 #include <Windows.h>
+#include <botan/botan.h>
+#include <botan/uuid.h>
 
 // Definitions
 #define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24
