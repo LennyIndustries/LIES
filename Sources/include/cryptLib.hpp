@@ -21,6 +21,12 @@
 #include <Windows.h>
 #include <botan/botan.h>
 #include <botan/uuid.h>
+#include <botan/rsa.h>
+#include <botan/pkcs8.h>
+#include <botan/pk_keys.h>
+#include <botan/pubkey.h>
+#include <botan/hex.h>
+#include <botan/secmem.h>
 
 // Definitions
 #define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24
@@ -31,6 +37,7 @@
 #define ERRORCLR 0xc
 #define MSGCLR 0xa
 #define ALTMSGCLR 0x9
+#define WAITMSG 0xd
 
 class cryptLib
 {

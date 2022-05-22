@@ -38,13 +38,14 @@
 #define ERR_R_EXIT -1 // Remote exit request
 #define ERR_0 0 // No error
 #define ERR_1 1 // Invalid network option
+#define ERR_2 2 // Key error
 
 int main(int argc, char **argv)
 {
 	cryptLib::colorPrint("Starting LIES server", DEFAULTCLR);
 	// Input Arguments
 	inputHandler myInputHandler(argc, argv);
-	
+	// Log naming
 	std::string logName = myInputHandler.getCmdOption("-log");
 	if (logName.empty()) // Default log name
 	{
@@ -59,6 +60,93 @@ int main(int argc, char **argv)
 	// Starting log
 	auto *myLog = lilog::create(logName, true, true);
 	LOG(myLog, 1, "Starting LIES server");
+	
+	// Generating keys
+	size_t bits = 0;
+	try
+	{
+		bits = std::stoi(myInputHandler.getCmdOption("-keyBits"));
+	}
+	catch (const std::exception &e)
+	{
+		LOG(myLog, 2, e.what());
+		cryptLib::colorPrint(e.what(), ERRORCLR);
+	}
+	
+	if (bits < 1024)
+	{
+		cryptLib::colorPrint("Key bits given too low, using lowest", ALTMSGCLR);
+		bits = 1024;
+	}
+	else if (bits > 2048)
+	{
+		cryptLib::colorPrint("Key bits given too high, using highest", ALTMSGCLR);
+		bits = 2048;
+	}
+	else if ((bits % 256) != 0)
+	{
+		cryptLib::colorPrint("Key bits given not multiple of 256, using average", ALTMSGCLR);
+		bits = 1536;
+	}
+	// Key prep
+	Botan::AutoSeeded_RNG rng;
+	LOG(myLog, 1, "Generating key: %i", bits);
+	cryptLib::colorPrint("Generating key, this might take a moment\nUsing: " + std::to_string(bits) + " bits", WAITMSG);
+	// Key gen
+	Botan::RSA_PrivateKey key(rng, bits);
+	// The following is unsafe, but for this I don't care
+	// WARNING unencrypted key storage is unsafe
+	std::string keyPrivate_unsecure = Botan::PKCS8::PEM_encode(key);
+	std::string keyPublic_unsecure = Botan::X509::PEM_encode(key);
+	// WARNING printing key is unsafe
+	std::cout << "Keys:\n" << keyPrivate_unsecure << keyPublic_unsecure;
+	
+	Botan::DataSource_Memory DSMPrivate(keyPrivate_unsecure);
+	Botan::DataSource_Memory DSMPublic(keyPublic_unsecure);
+	
+	Botan::PKCS8_PrivateKey *PKCS8Key_Private;
+	Botan::X509_PublicKey *X509Key_public;
+	
+	try
+	{
+		PKCS8Key_Private = Botan::PKCS8::load_key(DSMPrivate, rng);
+		X509Key_public = Botan::X509::load_key(DSMPublic);
+		
+		if ((!PKCS8Key_Private->check_key(rng, true)) || (!X509Key_public->check_key(rng, true)))
+		{
+			cryptLib::colorPrint("Keys failed check", ERRORCLR);
+			delete PKCS8Key_Private;
+			delete X509Key_public;
+			throw std::invalid_argument("Loaded keys are invalid");
+		}
+	}
+	catch (const std::exception &e)
+	{
+		LOG(myLog, 2, e.what());
+		cryptLib::colorPrint(e.what(), ERRORCLR);
+		return ERR_2;
+	}
+	
+	std::unique_ptr <Botan::Private_Key> privateKey(PKCS8Key_Private);
+	std::unique_ptr <Botan::Public_Key> publicKey(X509Key_public);
+	
+	// Encryption testing
+	{ // Don't need any of this later
+		cryptLib::colorPrint("Testing keys:", WAITMSG);
+		std::cout << "Private: " << privateKey.get() << "\nPublic: " << publicKey.get() << std::endl;
+		// Base text
+		std::string plainText = "He had accidentally hacked into his company's server.";
+		std::vector<uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
+		// Encryption
+		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME1(SHA-256)");
+		std::vector<uint8_t> enc_t = enc.encrypt(pt, rng);
+		// Decrypt
+		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME1(SHA-256)");
+		std::vector<uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
+		
+		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;
+		cryptLib::colorPrint("Maximum encrypt size: " + std::to_string(enc.maximum_input_size()), WAITMSG); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
+	}
 	
 	// Connecting benternet
 	try
@@ -144,8 +232,8 @@ int main(int argc, char **argv)
 				Botan::UUID uuid;
 				do
 				{
-					Botan::AutoSeeded_RNG rng;
-					uuid = Botan::UUID(rng);
+					Botan::AutoSeeded_RNG uuidRng;
+					uuid = Botan::UUID(uuidRng);
 					std::cout << "New UUID: " << uuid.to_string() << std::endl;
 				} while (!uuid.is_valid());
 				std::string returnString = "LennyIndustries|LIES_UUID|" + uuid.to_string();
