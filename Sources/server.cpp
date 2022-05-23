@@ -42,6 +42,7 @@
 
 int main(int argc, char **argv)
 {
+	SetConsoleTitleA("LIES Server");
 	cryptLib::colorPrint("Starting LIES server", DEFAULTCLR);
 	// Input Arguments
 	inputHandler myInputHandler(argc, argv);
@@ -145,7 +146,44 @@ int main(int argc, char **argv)
 		std::vector<uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
 		
 		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;
-		cryptLib::colorPrint("Maximum encrypt size: " + std::to_string(enc.maximum_input_size()), WAITMSG); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
+		cryptLib::colorPrint("Maximum encrypt size: " + std::to_string(enc.maximum_input_size()), ALTMSGCLR); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
+		
+		cryptLib::colorPrint("Testing hash:", WAITMSG);
+		std::unique_ptr<Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
+		crc32->update(plainText);
+		Botan::secure_vector<uint8_t> hashOut = crc32->final();
+		std::cout << "CRC32 hash: " << Botan::hex_encode(hashOut) << std::endl;
+		
+		cryptLib::colorPrint("Testing text encryption:", WAITMSG);
+		const Botan::BigInt n = 1000000000000000;
+		std::string pass = "Testing"; // A password, given by the user
+		const std::vector<uint8_t> tweak = Botan::unlock(hashOut); // tweak based on text hash
+		std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+		// Encryption
+		std::unique_ptr<Botan::Cipher_Mode> encFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+		Botan::secure_vector<uint8_t> pbkdfKey = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
+		encFPE->set_key(pbkdfKey);
+//		Botan::secure_vector<uint8_t> ivFPE = rng.random_vec(encFPE->default_nonce_length());
+		Botan::secure_vector<uint8_t> ptFPE(plainText.data(), plainText.data()+plainText.length());
+//		encFPE->start(ivFPE);
+		encFPE->finish(ptFPE);
+		std::cout << "Encrypted:\n" << "Not shown, random data" << std::endl;
+		// Decryption
+		std::unique_ptr<Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+		decFPE->set_key(pbkdfKey);
+//		decFPE->start(ivFPE);
+		decFPE->finish(ptFPE);
+		Botan::secure_vector<uint8_t> out(ptFPE.begin(), ptFPE.end());
+		std::cout << "Decrypted:\n" << out.data() << std::endl;
+		
+//		const Botan::BigInt encryptedFPE = Botan::FPE::fe1_encrypt(n, 'V', key_FPE1, tweak);
+//		const Botan::BigInt decryptedFPE = Botan::FPE::fe1_decrypt(n, encryptedFPE, key_FPE1, tweak);
+//		std::istringstream hex(decryptedFPE.to_hex_string());
+//		unsigned char character;
+//		unsigned int c;
+//		hex >> std::hex >> c;
+//		character = c;
+//		std::cout << encryptedFPE.to_dec_string() << std::endl << decryptedFPE.to_hex_string() << std::endl << character << std::endl;
 	}
 	
 	// Connecting benternet

@@ -19,6 +19,7 @@
 #include <cstring>
 #include <vector>
 #include <Windows.h>
+// Botan
 #include <botan/botan.h>
 #include <botan/uuid.h>
 #include <botan/rsa.h>
@@ -27,6 +28,10 @@
 #include <botan/pubkey.h>
 #include <botan/hex.h>
 #include <botan/secmem.h>
+#include <botan/hash.h>
+#include <botan/fpe_fe1.h>
+#include <botan/pbkdf.h>
+#include <botan/cipher_mode.h>
 
 // Definitions
 #define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24
