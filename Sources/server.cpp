@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 		tm *ltm = localtime(&now);
 		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon) + "-" + std::to_string(ltm->tm_wday);
 		dateTime += "_" + std::to_string(ltm->tm_hour) + "-" + std::to_string(ltm->tm_min) + "-" + std::to_string(ltm->tm_sec);
-		logName = "LIES" + dateTime + ".log";
+		logName = "LIES_server" + dateTime + ".log";
 	}
 	std::cout << "Log name: " << logName << std::endl;
 	
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
 			std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n";
 			std::cout << "'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
 			SetConsoleTextAttribute(hConsole, 0x7);
-			return ERR_1;
+			throw std::invalid_argument("Invalid network option");
 		}
 		
 		subscriber.set(zmq::sockopt::subscribe, MSG_PREFIX); // LennyIndustries|ProjectName|Function|Message
@@ -256,15 +256,20 @@ int main(int argc, char **argv)
 			LOG(myLog, 1, "Size of received message: %i", msg->size());
 			cryptLib::colorPrint("Size of received message: " + std::to_string(msg->size()), ALTMSGCLR);
 			
-			if ((function == "encrypt") || (function == "decrypt"))
+			if ((function == "Encrypt") || (function == "Decrypt"))
 			{
 				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, myLog, &ventilator);
 			}
-			else if (function == "key")
+			else if (function == "Key")
 			{
 				// Send the public key LennyIndustries|LIES_Key|
+				std::string reply = "LennyIndustries|LIES_Key|";
+				reply += keyPublic_unsecure;
+				LOG(myLog, 1, "Sending key back");
+				cryptLib::colorPrint("Sending key back", ALTMSGCLR);
+				ventilator.send(reply.c_str(), reply.length());
 			}
-			else if (function == "uuid")
+			else if (function == "UUID")
 			{
 				// Send UUID
 				Botan::UUID uuid;
@@ -279,9 +284,11 @@ int main(int argc, char **argv)
 				cryptLib::colorPrint("Sending UUID back", ALTMSGCLR);
 				ventilator.send(returnString.c_str(), returnString.length());
 			}
-			else if (function == "ping")
+			else if (function == "Ping")
 			{
 				// Send pong
+				LOG(myLog, 1, "Sending pong");
+				cryptLib::colorPrint("Sending pong", ALTMSGCLR);
 				ventilator.send("LennyIndustries|LIES_Pong", 25);
 			}
 			else if (function == "exit")
@@ -299,9 +306,10 @@ int main(int argc, char **argv)
 			cryptLib::colorPrint("Done", MSGCLR);
 		}
 	}
-	catch (zmq::error_t &ex)
+	catch (const std::exception &e)
 	{
-		std::cerr << "Caught an exception : " << ex.what();
+		LOG(myLog, 3, e.what());
+		cryptLib::colorPrint(e.what(), ERRORCLR);
 	}
 	
 	// Halting server
