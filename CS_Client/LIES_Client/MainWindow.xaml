@@ -1,0 +1,48 @@
+﻿<Window x:Class="LIES_Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LIES_Client"
+        mc:Ignorable="d"
+        Title="LIES Client" Height="450" Width="800"
+        ResizeMode="NoResize">
+    <Grid>
+        <GroupBox Header="Connection" HorizontalAlignment="Left" Height="76" Margin="10,10,0,0" VerticalAlignment="Top" Width="230">
+            <Grid HorizontalAlignment="Left" Height="57" VerticalAlignment="Top" Width="220" Margin="0,0,-2,0">
+                <Label Content="Connect to" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <ComboBox Name="ConnectionCb" HorizontalAlignment="Left" Margin="90,4,0,0" VerticalAlignment="Top" Width="120"/>
+                <Button Name="TestConnectionBtn" Click="TestConnectionBtn_OnClick" Content="Test connection" HorizontalAlignment="Left" Margin="0,31,0,0" VerticalAlignment="Top" Width="185"/>
+                <Ellipse Name="ServerStatus" Fill="#FFFFFFFF" HorizontalAlignment="Left" Height="20" Margin="190,31,0,0" Stroke="Black" VerticalAlignment="Top" Width="20"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Options" HorizontalAlignment="Left" Height="76" VerticalAlignment="Top" Width="531" Margin="245,10,0,0">
+            <Grid HorizontalAlignment="Left" Height="33" VerticalAlignment="Top" Width="527" Margin="0,0,-2,0">
+                <ComboBox Name="OptionsCb" HorizontalAlignment="Left" Margin="0,4,0,0" VerticalAlignment="Top" Width="517"/>
+                <Button Name="OptionsBtn" Click="OptionsBtn_OnClick" Content="Validate" HorizontalAlignment="Left" Margin="415,31,0,-20" VerticalAlignment="Top" Width="75" Height="22"/>
+                <Ellipse x:Name="OptionStatus" Fill="#FFFFFFFF" HorizontalAlignment="Left" Height="22" Margin="495,31,0,-20" Stroke="Black" VerticalAlignment="Top" Width="22"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Files" HorizontalAlignment="Left" Height="142" Margin="10,91,0,0" VerticalAlignment="Top" Width="766">
+            <Grid HorizontalAlignment="Left" Height="126" VerticalAlignment="Top" Width="762" Margin="0,0,-2,0">
+                <Label Content="Image" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                <Label Content="Text" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top"/>
+                <Label Content="Output" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top"/>
+                <Label Content="Password" HorizontalAlignment="Left" Margin="10,95,0,0" VerticalAlignment="Top"/>
+
+                <TextBox Name="ImageTextBox" HorizontalAlignment="Left" Height="23" Margin="75,14,0,0" TextWrapping="Wrap" Text="Path to image file" VerticalAlignment="Top" Width="597"/>
+                <TextBox Name="TextTextBox" HorizontalAlignment="Left" Height="23" Margin="75,42,0,0" TextWrapping="Wrap" Text="Path to text file" VerticalAlignment="Top" Width="597"/>
+                <TextBox Name="OutputTextBox" HorizontalAlignment="Left" Height="23" Margin="75,70,0,0" TextWrapping="Wrap" Text="Path to output file" VerticalAlignment="Top" Width="597"/>
+                <PasswordBox Name="PasswordBox" HorizontalAlignment="Left" Margin="75,98,0,0" VerticalAlignment="Top" Width="597" Height="20"/>
+
+                <Button Name="ImageBtn" Click="ImageBtn_OnClick" Content="Browse" HorizontalAlignment="Left" Margin="677,14,0,0" VerticalAlignment="Top" Width="75" Height="22"/>
+                <Button Name="TextBtn" Click="TextBtn_OnClick" Content="Browse" HorizontalAlignment="Left" Margin="677,42,0,0" VerticalAlignment="Top" Width="75" Height="22"/>
+                <Button Name="OutputBtn" Click="OutputBtn_OnClick" Content="Browse" HorizontalAlignment="Left" Margin="677,70,0,0" VerticalAlignment="Top" Width="75" Height="22"/>
+                <Button Name="SendBtn" Click="SendBtn_OnClick" Content="Send" HorizontalAlignment="Left" Margin="677,98,0,0" VerticalAlignment="Top" Width="75"/>
+            </Grid>
+        </GroupBox>
+        <TextBox Name="ProgramOutput" HorizontalAlignment="Left" Height="161" Margin="10,243,0,0" TextWrapping="Wrap" Text="Program output" VerticalAlignment="Top" Width="766"/>
+    </Grid>
+</Window>

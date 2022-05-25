@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1259
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LIES_Client", "LIES_Client.csproj", "{3755D7BA-9AF9-4060-BB50-02A2066B8C84}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3755D7BA-9AF9-4060-BB50-02A2066B8C84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3755D7BA-9AF9-4060-BB50-02A2066B8C84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3755D7BA-9AF9-4060-BB50-02A2066B8C84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3755D7BA-9AF9-4060-BB50-02A2066B8C84}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A8105D49-1B4A-47B3-B42E-B299FF1524D4}
+	EndGlobalSection
+EndGlobal

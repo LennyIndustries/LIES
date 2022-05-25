@@ -56,41 +56,50 @@ void connectionHandler::handle()
 		cryptLib::colorPrint("Message solver failed", ERRORCLR);
 		this->error = true;
 	}
-	if (cryptLib::vectorCompare(this->function, "encrypt"))
+	if (!this->function.empty())
 	{
-		if (this->text.empty() || this->image.empty())
+		if (cryptLib::vectorCompare(this->function, "encrypt"))
 		{
-			LOG(this->myLog, 2, "Failed to set text or image");
-			cryptLib::colorPrint("Failed to set text or image", ERRORCLR);
-			this->error = true;
+			if (this->text.empty() || this->image.empty())
+			{
+				LOG(this->myLog, 2, "Failed to set text or image");
+				cryptLib::colorPrint("Failed to set text or image", ERRORCLR);
+				this->error = true;
+			}
+		}
+		if (cryptLib::vectorCompare(this->function, "decrypt"))
+		{
+			if (this->image.empty())
+			{
+				LOG(this->myLog, 2, "Failed to set text");
+				cryptLib::colorPrint("Failed to set text", ERRORCLR);
+				this->error = true;
+			}
 		}
 	}
-	if (cryptLib::vectorCompare(this->function, "decrypt"))
+	if (!this->image.empty())
 	{
-		if (this->image.empty())
+		if ((this->image[0] != 'B') || (this->image[1] != 'M'))
 		{
-			LOG(this->myLog, 2, "Failed to set text");
-			cryptLib::colorPrint("Failed to set text", ERRORCLR);
+			LOG(this->myLog, 2, "BMP file error");
+			cryptLib::colorPrint("BMP file error", ERRORCLR);
 			this->error = true;
 		}
-	}
-	if ((this->image[0] != 'B') || (this->image[1] != 'M'))
-	{
-		LOG(this->myLog, 2, "BMP file error");
-		cryptLib::colorPrint("BMP file error", ERRORCLR);
-		this->error = true;
-	}
-	if (this->uuid.to_string().empty())
-	{
-		LOG(this->myLog, 2, "UUID not set");
-		cryptLib::colorPrint("UUID not set", ERRORCLR);
-		this->error = true;
 	}
 	if (!this->uuid.is_valid())
 	{
 		LOG(this->myLog, 2, "UUID not valid");
 		cryptLib::colorPrint("UUID not valid", ERRORCLR);
 		this->error = true;
+	}
+	else
+	{
+		if (this->uuid.to_string().empty())
+		{
+			LOG(this->myLog, 2, "UUID not set");
+			cryptLib::colorPrint("UUID not set", ERRORCLR);
+			this->error = true;
+		}
 	}
 	
 	if (this->error)
