@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	{
 		time_t now = time(nullptr); // https://www.tutorialspoint.com/cplusplus/cpp_date_time.htm
 		tm *ltm = localtime(&now);
-		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon) + "-" + std::to_string(ltm->tm_wday);
+		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon + 1) + "-" + std::to_string(ltm->tm_mday);
 		dateTime += "_" + std::to_string(ltm->tm_hour) + "-" + std::to_string(ltm->tm_min) + "-" + std::to_string(ltm->tm_sec);
 		logName = "LIES_server" + dateTime + ".log";
 	}
@@ -61,6 +61,19 @@ int main(int argc, char **argv)
 	// Starting log
 	auto *myLog = lilog::create(logName, true, true);
 	LOG(myLog, 1, "Starting LIES server");
+	
+	// Checking connection option
+	if (!myInputHandler.cmdOptionExists("-localhost") && !myInputHandler.cmdOptionExists("-local") && !myInputHandler.cmdOptionExists("-internet"))
+	{
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, ERRORCLR);
+		LOG(myLog, 3, "Invalid network option");
+		std::cout << "No valid network option given\n";
+		std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n";
+		std::cout << "'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
+		SetConsoleTextAttribute(hConsole, 0x7);
+		return ERR_1;
+	}
 	
 	// Generating keys
 	size_t bits = 0;

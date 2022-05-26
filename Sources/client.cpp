@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	{
 		time_t now = time(nullptr); // https://www.tutorialspoint.com/cplusplus/cpp_date_time.htm
 		tm *ltm = localtime(&now);
-		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon) + "-" + std::to_string(ltm->tm_wday);
+		std::string dateTime = "_" + std::to_string(1900 + ltm->tm_year) + "-" + std::to_string(ltm->tm_mon + 1) + "-" + std::to_string(ltm->tm_mday);
 		dateTime += "_" + std::to_string(ltm->tm_hour) + "-" + std::to_string(ltm->tm_min) + "-" + std::to_string(ltm->tm_sec);
 		logName = "LIES_client" + dateTime + ".log";
 	}
@@ -63,6 +63,19 @@ int main(int argc, char **argv)
 	// Starting log
 	auto *myLog = lilog::create(logName, true, true);
 	LOG(myLog, 1, "Starting LIES client");
+	
+	// Checking connection option
+	if (!myInputHandler.cmdOptionExists("-localhost") && !myInputHandler.cmdOptionExists("-local") && !myInputHandler.cmdOptionExists("-internet"))
+	{
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, ERRORCLR);
+		LOG(myLog, 3, "Invalid network option");
+		std::cout << "No valid network option given\n";
+		std::cout << "Valid options:\n'-localhost': uses localhost address, you need to host the broker yourself\n";
+		std::cout << "'-local': uses the local ip of the broker, you need to be on the same network\n'-internet': connects over the internet";
+		SetConsoleTextAttribute(hConsole, 0x7);
+		return ERR_1;
+	}
 	
 	// Variables
 	size_t bits = 0;
@@ -88,7 +101,10 @@ int main(int argc, char **argv)
 	{
 		LOG(myLog, 3, "Failed to get encrypt/decrypt command");
 		cryptLib::colorPrint("What do you want to do\nYou did not specify whether to encrypt or decrypt\nAborting", ERRORCLR);
-		return ERR_3;
+		myLog->kill();
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, 0x7);
+		
 	}
 	
 	if (encrypt)
@@ -97,7 +113,12 @@ int main(int argc, char **argv)
 		LOG(myLog, 1, "Encrypting");
 		cryptLib::colorPrint("Encrypting", ALTMSGCLR);
 		if (!checkFiles(myLog, 7, imagePath, textPath, passwd))
+		{
+			myLog->kill();
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 0x7);
 			return ERR_3;
+		}
 	}
 	else
 	{
@@ -105,7 +126,12 @@ int main(int argc, char **argv)
 		LOG(myLog, 1, "Decrypting");
 		cryptLib::colorPrint("Decrypting", ALTMSGCLR);
 		if (!checkFiles(myLog, 5, imagePath, textPath, passwd))
+		{
+			myLog->kill();
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 0x7);
 			return ERR_3;
+		}
 	}
 	
 	if (bits < 1024)
@@ -161,6 +187,9 @@ int main(int argc, char **argv)
 	{
 		LOG(myLog, 2, e.what());
 		cryptLib::colorPrint(e.what(), ERRORCLR);
+		myLog->kill();
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, 0x7);
 		return ERR_2;
 	}
 	
