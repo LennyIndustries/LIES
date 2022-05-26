@@ -152,10 +152,10 @@ int main(int argc, char **argv)
 		std::string plainText = "He had accidentally hacked into his company's server.";
 		std::vector<uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
 		// Encryption
-		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME1(SHA-256)");
+		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME-PKCS1-v1_5");
 		std::vector<uint8_t> enc_t = enc.encrypt(pt, rng);
 		// Decrypt
-		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME1(SHA-256)");
+		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME-PKCS1-v1_5");
 		std::vector<uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
 		
 		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;

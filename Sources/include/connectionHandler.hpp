@@ -42,10 +42,16 @@ private:
 	// Functions
 	void handle();
 	bool messageSolver();
-	bool handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
-	bool handleText(std::vector <char> &storage, std::vector <char> &rest);
+	bool handleTextLength(std::vector <char> &storage, size_t &equalsPosition);
+	bool handleText(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	
 	bool handleImageLength(std::vector <char> &storage, size_t &equalsPosition);
+	bool handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	
 	bool handleUuid(std::vector <char> &storage, size_t &equalsPosition);
+	void handleKey(std::vector <char> &storage, size_t &equalsPosition);
+	void handlePassword(std::vector <char> &storage, size_t &equalsPosition);
+	
 	void encryptCall();
 	void decryptCall();
 	// Variables
@@ -54,6 +60,8 @@ private:
 	
 	std::vector <char> function;
 	std::vector <char> message;
+	std::vector <char> key;
+	std::string passwd;
 	Botan::UUID uuid; // Unused, meant for multithreading
 
 //	char functionID;
@@ -62,6 +70,7 @@ private:
 	
 	std::vector <char> text;
 	std::vector <char> image;
+	int textLength;
 	int imageLength;
 //	char *text;
 //	char *image;

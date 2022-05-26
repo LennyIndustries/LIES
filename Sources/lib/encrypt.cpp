@@ -23,8 +23,15 @@ encrypt::encrypt(std::vector <char> image, std::vector <char> message, lilog *lo
 void encrypt::encryptImage()
 {
 	// Get image data
+	std::cout << "Getting image data\n";
+//	std::cout << cryptLib::printableVector(this->inputImage);
+	std::ofstream debug("outputImage.bmp", std::ios::out | std::ofstream::binary);
+	std::copy(this->inputImage.begin(), this->inputImage.end(), std::ostreambuf_iterator <char>(debug));
+	debug.close();
+	return;
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	// Get info from header
+	std::cout << "Getting header info\n";
 	// http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm
 	int reserved = *(int *) &this->headerData[6];
 	int with = *(int *) &this->headerData[18];
@@ -38,6 +45,7 @@ void encrypt::encryptImage()
 	std::cout << "Bit per pixel = " << bitPerPixel << std::endl;
 	std::cout << "Maximum characters in image = " << maxChars << std::endl;
 	// Checking image and text compatibility
+	std::cout << "Checking compatibility\n";
 	if (bitPerPixel < 8) // If pixel depth is not enough the program will visibly alter the image
 	{
 		LOG(myLog, 2, "Pixel depth is too low: %i", bitPerPixel);
@@ -57,6 +65,7 @@ void encrypt::encryptImage()
 		return;
 	}
 	// Write the text to the image, prep
+	std::cout << "Prepping write\n";
 	std::vector <char> textToWrite; // Vector with all the text and tags
 	textToWrite.push_back(STX); // Start tag
 	std::copy(this->text.begin(), this->text.end(), std::back_inserter(textToWrite)); // Text
@@ -66,6 +75,7 @@ void encrypt::encryptImage()
 	unsigned char storageText = 0x00;
 	unsigned char storageImage = 0x00;
 	// Encrypt the text in the image
+	std::cout << "Writing\n";
 	for (unsigned int i = 0; i < textToWrite.size(); i++) // Loop trough all the text
 	{
 		for (unsigned int j = 0; j < 8; j++) // Byte loop
@@ -76,15 +86,19 @@ void encrypt::encryptImage()
 		}
 	}
 	// Set ENCRYPT flag in header
+	std::cout << "Setting flag\n";
 	this->headerData[6] = ENCRYPTED;
 	// Write it all to returnImage
+	std::cout << "Writing return image\n";
 	std::copy(this->headerData.begin(), this->headerData.end(), std::back_inserter(this->returnImage)); // Copy the header
 	std::copy(this->imageData.begin(), this->imageData.end(), std::back_inserter(this->returnImage)); // Copy the image
 	// Save image for testing
+	std::cout << "Saving for debug\n";
 	std::ofstream image("outputImage.bmp", std::ios::out | std::ofstream::binary);
 	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator <char>(image));
 	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator <char>(image));
 	image.close();
+	std::cout << "Done\n";
 }
 
 // Getters / Setters

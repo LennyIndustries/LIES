@@ -21,6 +21,8 @@ using Microsoft.Win32;
 using NetMQ;
 using NetMQ.Sockets;
 using System.IO;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using Path = System.IO.Path;
 
 namespace LIES_Client
@@ -35,7 +37,7 @@ namespace LIES_Client
         public bool InputsAreValid = false;
         public string ServerPush = string.Empty;
         public string ServerSub = string.Empty;
-        public string DefaultOfdPath = "c:\\";
+        public string DefaultOfdPath = "D:\\Deze PC\\Documenten\\GitHub\\Project_TBD\\TestFiles"; // c:\\
         public bool Encrypt;
         public MainWindow()
         {
@@ -68,20 +70,9 @@ namespace LIES_Client
 
         private void Handle()
         {
-            Print("Sending data");
-            var selectedOption = OptionsCb.SelectedIndex;
-            var image = ImageTextBox.Text;
-            var text = TextTextBox.Text;
-            var output = OutputTextBox.Text;
-            var mask = 0x1;
-            var checkOptions = 0;
-            var check = 0;
-            var uuid = string.Empty;
-
             var timeout = new TimeSpan(0, 0, 0, 5, 0);
-            var message = "LennyIndustries|LIES_Server|";
-
-            message += Encrypt ? "Encrypt|" : "Decrypt|";
+            var message = string.Empty;
+            string returnMessage;
 
             var push = new PushSocket();
             var sub = new SubscriberSocket();
@@ -89,13 +80,79 @@ namespace LIES_Client
             push.Connect(ServerPush);
             sub.Connect(ServerSub);
 
+            Print("Requesting UUID");
+            var uuid = string.Empty;
+
+            returnMessage = string.Empty;
+
+            message = "LennyIndustries|LIES_Server|UUID";
+
+            sub.Subscribe("LennyIndustries|LIES_UUID|");
+            push.SendFrame(message);
+            sub.TryReceiveFrameString(timeout, out returnMessage);
+
+            if (returnMessage == string.Empty)
+            {
+                Print("Did not receive UUID");
+                MessageBox.Show("Did not receive UUID.", "Send error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                return;
+            }
+            uuid = returnMessage.Substring(26);
+
+            //Print(uuid);
+
+            Print("Generating key");
+            var csp = new RSACryptoServiceProvider(2048);
+            TextWriter publicKeyString = new StringWriter();
+
+            var privateKey = csp.ExportParameters(true);
+
+            ExportPublicKey(csp, publicKeyString);
+            //Print(publicKeyString.ToString());
+
+            Print("Requesting key");
+            var key = string.Empty;
+
+            returnMessage = string.Empty;
+
+            message = "LennyIndustries|LIES_Server|Key";
+
+            sub.Subscribe("LennyIndustries|LIES_Key|");
+            push.SendFrame(message);
+            sub.TryReceiveFrameString(timeout, out returnMessage);
+
+            if (returnMessage == string.Empty)
+            {
+                Print("Did not receive key");
+                MessageBox.Show("Did not receive key.", "Send error", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                return;
+            }
+            key = returnMessage.Substring(25);
+
+            //Print(key);
+
+            Print("Collecting data");
+            var image = ImageTextBox.Text;
+            var text = TextTextBox.Text;
+            var mask = 0x1;
+            var checkOptions = 0;
+            var check = 0;
+
+            csp = new RSACryptoServiceProvider();
+            csp.ImportParameters(privateKey);
+
+            message = "LennyIndustries|LIES_Server|";
+            message += Encrypt ? "Encrypt|" : "Decrypt|";
+            message += "UUID=" + uuid + ":";
+            message += "Key=" + publicKeyString + ":";
+
             checkOptions = GetOption(out _);
 
             check = mask & checkOptions;
             if (check != 0)
             {
                 var password = PasswordBox.Password;
-                message += "Password=" + password + ":";
+                message += "Password=" + password + ":"; // Convert.ToBase64String(csp.Encrypt(Encoding.Unicode.GetBytes(X), false))
             }
 
             mask <<= 2;
@@ -114,14 +171,141 @@ namespace LIES_Client
                 var fileData = new byte[fs.Length];
                 fs.Read(fileData, 0, fileData.Length);
                 fs.Close();
-                var imageLength = fileData.Length;
 
-                message += "ImageLength=" + imageLength + ":Image=" + System.Text.Encoding.UTF8.GetString(fileData) + ":";
+                var imageToSend = new string(Encoding.ASCII.GetChars(fileData));
+
+                message += "ImageLength=" + imageToSend.Length + ":Image=" + imageToSend; // System.Text.Encoding.UTF8.GetString(fileData)
+
+                //Print(System.Text.Encoding.Default.GetString(fileData));
             }
 
-            sub.Subscribe("LennyIndustries|LIES_Client|" + uuid);
+            //Print(message);
+
+            Print("Encrypting data");
+            
+
+
+
+            Print("Sending data");
+            var output = OutputTextBox.Text;
+            
+            returnMessage = string.Empty;
+            message = message.Remove(message.Length - 1);
+
+            sub.Subscribe("LennyIndustries|LIES_Client|" + uuid + "|");
             push.SendFrame(message);
             sub.TryReceiveFrameString(timeout, out var msg);
+        }
+
+        private static void ExportPublicKey(RSACryptoServiceProvider csp, TextWriter outputStream)
+        {
+            var parameters = csp.ExportParameters(false);
+            using (var stream = new MemoryStream())
+            {
+                var writer = new BinaryWriter(stream);
+                writer.Write((byte)0x30); // SEQUENCE
+                using (var innerStream = new MemoryStream())
+                {
+                    var innerWriter = new BinaryWriter(innerStream);
+                    innerWriter.Write((byte)0x30); // SEQUENCE
+                    EncodeLength(innerWriter, 13);
+                    innerWriter.Write((byte)0x06); // OBJECT IDENTIFIER
+                    var rsaEncryptionOid = new byte[] { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01 };
+                    EncodeLength(innerWriter, rsaEncryptionOid.Length);
+                    innerWriter.Write(rsaEncryptionOid);
+                    innerWriter.Write((byte)0x05); // NULL
+                    EncodeLength(innerWriter, 0);
+                    innerWriter.Write((byte)0x03); // BIT STRING
+                    using (var bitStringStream = new MemoryStream())
+                    {
+                        var bitStringWriter = new BinaryWriter(bitStringStream);
+                        bitStringWriter.Write((byte)0x00); // # of unused bits
+                        bitStringWriter.Write((byte)0x30); // SEQUENCE
+                        using (var paramsStream = new MemoryStream())
+                        {
+                            var paramsWriter = new BinaryWriter(paramsStream);
+                            EncodeIntegerBigEndian(paramsWriter, parameters.Modulus); // Modulus
+                            EncodeIntegerBigEndian(paramsWriter, parameters.Exponent); // Exponent
+                            var paramsLength = (int)paramsStream.Length;
+                            EncodeLength(bitStringWriter, paramsLength);
+                            bitStringWriter.Write(paramsStream.GetBuffer(), 0, paramsLength);
+                        }
+                        var bitStringLength = (int)bitStringStream.Length;
+                        EncodeLength(innerWriter, bitStringLength);
+                        innerWriter.Write(bitStringStream.GetBuffer(), 0, bitStringLength);
+                    }
+                    var length = (int)innerStream.Length;
+                    EncodeLength(writer, length);
+                    writer.Write(innerStream.GetBuffer(), 0, length);
+                }
+
+                var base64 = Convert.ToBase64String(stream.GetBuffer(), 0, (int)stream.Length).ToCharArray();
+                outputStream.WriteLine("-----BEGIN PUBLIC KEY-----");
+                for (var i = 0; i < base64.Length; i += 64)
+                {
+                    outputStream.WriteLine(base64, i, Math.Min(64, base64.Length - i));
+                }
+                outputStream.WriteLine("-----END PUBLIC KEY-----");
+            }
+        }
+
+        private static void EncodeLength(BinaryWriter stream, int length)
+        {
+            if (length < 0) throw new ArgumentOutOfRangeException("length", "Length must be non-negative");
+            if (length < 0x80)
+            {
+                // Short form
+                stream.Write((byte)length);
+            }
+            else
+            {
+                // Long form
+                var temp = length;
+                var bytesRequired = 0;
+                while (temp > 0)
+                {
+                    temp >>= 8;
+                    bytesRequired++;
+                }
+                stream.Write((byte)(bytesRequired | 0x80));
+                for (var i = bytesRequired - 1; i >= 0; i--)
+                {
+                    stream.Write((byte)(length >> (8 * i) & 0xff));
+                }
+            }
+        }
+
+        private static void EncodeIntegerBigEndian(BinaryWriter stream, byte[] value, bool forceUnsigned = true)
+        {
+            stream.Write((byte)0x02); // INTEGER
+            var prefixZeros = 0;
+            for (var i = 0; i < value.Length; i++)
+            {
+                if (value[i] != 0) break;
+                prefixZeros++;
+            }
+            if (value.Length - prefixZeros == 0)
+            {
+                EncodeLength(stream, 1);
+                stream.Write((byte)0);
+            }
+            else
+            {
+                if (forceUnsigned && value[prefixZeros] > 0x7f)
+                {
+                    // Add a prefix zero to force unsigned if the MSB is 1
+                    EncodeLength(stream, value.Length - prefixZeros + 1);
+                    stream.Write((byte)0);
+                }
+                else
+                {
+                    EncodeLength(stream, value.Length - prefixZeros);
+                }
+                for (var i = prefixZeros; i < value.Length; i++)
+                {
+                    stream.Write(value[i]);
+                }
+            }
         }
 
         private void Print(string msg)
@@ -133,7 +317,7 @@ namespace LIES_Client
         private bool CheckServer(string connectionOption)
         {
             Print("Pinging server");
-            var timeout = new TimeSpan(0, 0, 0, 0, 500);
+            var timeout = new TimeSpan(0, 0, 0, 1, 0);
             var connectTo = "tcp://";
             var receiveFrom = "tcp://";
 
@@ -358,17 +542,29 @@ namespace LIES_Client
             };
 
             ofd.ShowDialog();
-            DefaultOfdPath = Path.GetDirectoryName(ofd.FileName);
+            try
+            {
+                DefaultOfdPath = Path.GetDirectoryName(ofd.FileName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                MessageBox.Show(e.Message, "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                return "Path Invalid";
+            }
             return ofd.FileName;
         }
 
         private void TestConnectionBtn_OnClick(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             UpdateConnection();
+            Mouse.OverrideCursor = null;
         }
 
         private void SendBtn_OnClick(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             UpdateConnection();
             ValidateInput();
 
@@ -376,11 +572,14 @@ namespace LIES_Client
             {
                 Handle();
             }
+            Mouse.OverrideCursor = null;
         }
 
         private void OptionsBtn_OnClick(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             ValidateInput();
+            Mouse.OverrideCursor = null;
         }
 
         private void ImageBtn_OnClick(object sender, RoutedEventArgs e)
