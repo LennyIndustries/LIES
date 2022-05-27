@@ -21,9 +21,11 @@ using Microsoft.Win32;
 using NetMQ;
 using NetMQ.Sockets;
 using System.IO;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Path = System.IO.Path;
+using Vector = System.Windows.Vector;
 
 namespace LIES_Client
 {
@@ -167,13 +169,22 @@ namespace LIES_Client
             check = mask & checkOptions;
             if (check != 0)
             {
+                FileStream fs = File.OpenRead(image);
+                byte[] b = new byte[fs.Length];
+                UTF8Encoding temp = new UTF8Encoding(true);
+                string imageToSend = string.Empty;
+                while (fs.Read(b, 0, b.Length) > 0)
+                {
+                    imageToSend += temp.GetString(b);
+                }
+                /**
                 var fs = new FileStream(image, FileMode.Open);
                 var fileData = new byte[fs.Length];
                 fs.Read(fileData, 0, fileData.Length);
                 fs.Close();
 
-                var imageToSend = new string(Encoding.ASCII.GetChars(fileData));
-
+                 = new string(Encoding.ASCII.GetChars(fileData));
+                **/
                 message += "ImageLength=" + imageToSend.Length + ":Image=" + imageToSend; // System.Text.Encoding.UTF8.GetString(fileData)
 
                 //Print(System.Text.Encoding.Default.GetString(fileData));

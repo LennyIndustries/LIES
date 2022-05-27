@@ -261,6 +261,38 @@ int main(int argc, char **argv)
 		std::cout << "Assigned UUID:\n" << uuid << std::endl;
 		// Requesting encrypt/decrypt
 		cryptLib::colorPrint("Requesting encrypt / decrypt", WAITMSG);
+		// Loading image
+		std::ifstream imageStream(imagePath, std::ios::binary);
+		std::vector <char> imageVector = std::vector <char> (std::istreambuf_iterator <char> (imageStream), std::istreambuf_iterator <char> ());
+		imageStream.close();
+		// Loading text
+		std::ifstream textStream(textPath, std::ifstream::binary);
+		std::vector <char> textVector = std::vector <char> (std::istreambuf_iterator <char> (textStream), std::istreambuf_iterator <char> ());
+		textStream.close();
+		// Sending prep
+		std::vector <char> messageToSend;
+		messageToSend.clear();
+		std::string tempString = "LennyIndustries|LIES_Server|Encrypt|UUID=";
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		std::copy(uuid.begin(), uuid.end(), std::back_inserter(messageToSend));
+		tempString = ":Password=";
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		std::copy(passwd.begin(), passwd.end(), std::back_inserter(messageToSend));
+		tempString = ":TextLength=" + std::to_string(textVector.size());
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		tempString = ":Text=";
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		std::copy(textVector.begin(), textVector.end(), std::back_inserter(messageToSend));
+		tempString = ":ImageLength=" + std::to_string(imageVector.size());
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		tempString = ":Image=";
+		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+		std::copy(imageVector.begin(), imageVector.end(), std::back_inserter(messageToSend));
+		// Sending
+		std::string subscribeTo = "LennyIndustries|LIES_Client_" + uuid + "|";
+		subscriber.set(zmq::sockopt::subscribe, subscribeTo);
+		ventilator.send(messageToSend.data(), messageToSend.size());
+		subscriber.recv(msg);
 		
 	}
 	catch (const std::exception &e)
