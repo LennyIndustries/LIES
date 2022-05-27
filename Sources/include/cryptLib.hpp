@@ -56,6 +56,7 @@ public:
 protected:
 	// Functions
 	static void getImageData(std::vector <char> &image, std::vector <char> &headerReturn, std::vector <char> &dataReturn);
+	static Botan::secure_vector<uint8_t> generateHash(std::vector <char> hashThis);
 private:
 };
 

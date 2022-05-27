@@ -72,12 +72,10 @@ private:
 	std::vector <char> image;
 	int textLength;
 	int imageLength;
-//	char *text;
-//	char *image;
 	
 	bool error;
-
-//	std::string output;
+	bool encryptSetting;
+	char options;
 };
 
 

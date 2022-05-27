@@ -150,53 +150,55 @@ int main(int argc, char **argv)
 		std::cout << "Private: " << privateKey.get() << "\nPublic: " << publicKey.get() << std::endl;
 		// Base text
 		std::string plainText = "He had accidentally hacked into his company's server.";
-		std::vector<uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
+		std::vector <uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
 		// Encryption
 		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME-PKCS1-v1_5");
-		std::vector<uint8_t> enc_t = enc.encrypt(pt, rng);
+		std::vector <uint8_t> enc_t = enc.encrypt(pt, rng);
 		// Decrypt
 		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME-PKCS1-v1_5");
-		std::vector<uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
-		
+		std::vector <uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
+
 		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;
-		cryptLib::colorPrint("Maximum encrypt size: " + std::to_string(enc.maximum_input_size()), ALTMSGCLR); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
-		
+		cryptLib::colorPrint("Maximum encrypt size: " +
+							 std::to_string(enc.maximum_input_size()), ALTMSGCLR); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
+
 		cryptLib::colorPrint("Testing hash:", WAITMSG);
-		std::unique_ptr<Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
+		std::unique_ptr <Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
 		crc32->update(plainText);
-		Botan::secure_vector<uint8_t> hashOut = crc32->final();
-		std::cout << "CRC32 hash: " << Botan::hex_encode(hashOut) << std::endl;
-		
+		Botan::secure_vector <uint8_t> hashOut = crc32->final();
+		std::cout << "CRC32 hash: " << Botan::hex_encode(hashOut) << "\n should be equal to 'B62C54AB'" << std::endl;
+
 		cryptLib::colorPrint("Testing text encryption:", WAITMSG);
 		const Botan::BigInt n = 1000000000000000;
 		std::string pass = "Testing"; // A password, given by the user
-		const std::vector<uint8_t> tweak = Botan::unlock(hashOut); // tweak based on text hash
-		std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+		const std::vector <uint8_t> tweak = Botan::unlock(hashOut); // tweak based on text hash
+		std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
 		// Encryption
-		std::unique_ptr<Botan::Cipher_Mode> encFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
-		Botan::secure_vector<uint8_t> pbkdfKey = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
+		std::unique_ptr <Botan::Cipher_Mode> encFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+		Botan::secure_vector <uint8_t> pbkdfKey = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
 		encFPE->set_key(pbkdfKey);
 //		Botan::secure_vector<uint8_t> ivFPE = rng.random_vec(encFPE->default_nonce_length());
-		Botan::secure_vector<uint8_t> ptFPE(plainText.data(), plainText.data()+plainText.length());
+		plainText += " Some more and longer text. This text needs to be longer so it can be used to test the encryption, if it is not long enough text send to the server might fail as well. Also We'll use this method of encryption to encrypt the text and image data send to and from the server having only RSA encryption on the key to encrypt and dercypt the data send.";// + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server.";
+		Botan::secure_vector <uint8_t> ptFPE(plainText.data(), plainText.data() + plainText.length());
 //		encFPE->start(ivFPE);
 		encFPE->finish(ptFPE);
 		std::cout << "Encrypted:\n" << "Not shown, random data" << std::endl;
+
+		// Encryption of the key with RSA
+//		Botan::PK_Encryptor_EME encKey(*publicKey, rng, "EME-PKCS1-v1_5");
+//		std::vector <uint8_t> encKey_t = enc.encrypt(pbkdfKey, rng);
+//
+//		Botan::PK_Decryptor_EME decKey(*privateKey, rng, "EME-PKCS1-v1_5");
+//		std::vector <uint8_t> decKey_t = Botan::unlock(dec.decrypt(encKey_t));
+
 		// Decryption
-		std::unique_ptr<Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-		decFPE->set_key(pbkdfKey);
+		Botan::secure_vector <uint8_t> pbkdfKey2 = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
+		std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+		decFPE->set_key(pbkdfKey2);
 //		decFPE->start(ivFPE);
 		decFPE->finish(ptFPE);
-		Botan::secure_vector<uint8_t> out(ptFPE.begin(), ptFPE.end());
+		Botan::secure_vector <uint8_t> out(ptFPE.begin(), ptFPE.end());
 		std::cout << "Decrypted:\n" << out.data() << std::endl;
-		
-//		const Botan::BigInt encryptedFPE = Botan::FPE::fe1_encrypt(n, 'V', key_FPE1, tweak);
-//		const Botan::BigInt decryptedFPE = Botan::FPE::fe1_decrypt(n, encryptedFPE, key_FPE1, tweak);
-//		std::istringstream hex(decryptedFPE.to_hex_string());
-//		unsigned char character;
-//		unsigned int c;
-//		hex >> std::hex >> c;
-//		character = c;
-//		std::cout << encryptedFPE.to_dec_string() << std::endl << decryptedFPE.to_hex_string() << std::endl << character << std::endl;
 	}
 	
 	// Connecting benternet
@@ -244,8 +246,9 @@ int main(int argc, char **argv)
 //		subscriber.setsockopt(ZMQ_SUBSCRIBE, MSG_PREFIX, strlen(MSG_PREFIX));
 		
 		auto *msg = new zmq::message_t();
-		std::string msgStr, function, message, subMsgStr;
+		std::string msgStr, subMsgStr;
 		std::size_t pos;
+		std::vector <char> messageVector, function, message;
 //		unsigned int uuid;
 		while (subscriber.handle() != nullptr)
 		{
@@ -253,27 +256,36 @@ int main(int argc, char **argv)
 			LOG(myLog, 1, "Incoming message");
 			cryptLib::colorPrint("Incoming message", MSGCLR);
 			
-			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
+			messageVector.clear();
+			messageVector.resize(msg->size());
+			std::memcpy(messageVector.data(), msg->data(), msg->size());
 			
-			subMsgStr = msgStr.substr(strlen(MSG_PREFIX));
-			pos = subMsgStr.find(FILTER_CHAR);
+			std::vector <char> tmpVector(cryptLib::subVector(messageVector, strlen(MSG_PREFIX)));
+			pos = cryptLib::vectorFind(tmpVector, FILTER_CHAR);
 			
-			function = subMsgStr.substr(0, pos);
-			message = subMsgStr.substr(pos + 1);
+			function.clear();
+			message.clear();
 			
-			std::vector <char> functionVector(function.begin(), function.end());
-			std::vector <char> messageVector(message.begin(), message.end());
-			
-			LOG(myLog, 1, "Function: %s", function.c_str());
-			cryptLib::colorPrint(std::string() + "Function: " + function, ALTMSGCLR);
-			LOG(myLog, 1, "Size of received message: %i", msg->size());
-			cryptLib::colorPrint("Size of received message: " + std::to_string(msg->size()), ALTMSGCLR);
-			
-			if ((function == "Encrypt") || (function == "Decrypt"))
+			if (pos == std::string::npos)
 			{
-				auto *myConnectionHandler = connectionHandler::create(functionVector, messageVector, myLog, &ventilator);
+				function = tmpVector;
 			}
-			else if (function == "Key")
+			else
+			{
+				function = cryptLib::subVector(tmpVector, 0, pos);
+				message = cryptLib::subVector(tmpVector, pos + 1);
+			}
+			
+			LOG(myLog, 1, "Function: %s", cryptLib::printableVector(function).c_str());
+			cryptLib::colorPrint(std::string() + "Function: " + cryptLib::printableVector(function), ALTMSGCLR);
+			LOG(myLog, 1, "Size of received message: %i", message.size());
+			cryptLib::colorPrint("Size of received message: " + std::to_string(message.size()), ALTMSGCLR);
+			
+			if ((cryptLib::vectorCompare(function, "Encrypt")) || (cryptLib::vectorCompare(function, "Decrypt")))
+			{
+				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator);
+			}
+			else if (cryptLib::vectorCompare(function, "Key"))
 			{
 				// Send the public key LennyIndustries|LIES_Key|
 				std::string reply = "LennyIndustries|LIES_Key|";
@@ -282,7 +294,7 @@ int main(int argc, char **argv)
 				cryptLib::colorPrint("Sending key back", ALTMSGCLR);
 				ventilator.send(reply.c_str(), reply.length());
 			}
-			else if (function == "UUID")
+			else if (cryptLib::vectorCompare(function, "UUID"))
 			{
 				// Send UUID
 				Botan::UUID uuid;
@@ -297,19 +309,12 @@ int main(int argc, char **argv)
 				cryptLib::colorPrint("Sending UUID back", ALTMSGCLR);
 				ventilator.send(returnString.c_str(), returnString.length());
 			}
-			else if (function == "Ping")
+			else if (cryptLib::vectorCompare(function, "Ping"))
 			{
 				// Send pong
 				LOG(myLog, 1, "Sending pong");
 				cryptLib::colorPrint("Sending pong", ALTMSGCLR);
 				ventilator.send("LennyIndustries|LIES_Pong", 25);
-			}
-			else if (function == "exit")
-			{
-				if (message == PASSWD)
-				{
-					return ERR_R_EXIT;
-				}
 			}
 			else
 			{

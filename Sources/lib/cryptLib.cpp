@@ -74,13 +74,21 @@ void cryptLib::getImageData(std::vector <char> &image, std::vector <char> &heade
 {
 	std::vector <char> headerData;
 	int dataOffset = 0;
-	
 	headerData = {image.begin(), image.begin() + 54};
 	dataOffset = *(int *) &headerData[10];
 	headerData.clear();
-	
 	std::copy(image.begin(), image.begin() + dataOffset, std::back_inserter(headerReturn));
 	std::copy(image.begin() + dataOffset, image.end(), std::back_inserter(dataReturn));
+}
+
+Botan::secure_vector<uint8_t> cryptLib::generateHash(std::vector <char> hashThis)
+{
+	Botan::secure_vector<uint8_t> returnHash;
+	std::unique_ptr <Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
+	crc32->update(cryptLib::printableVector(hashThis));
+	returnHash = crc32->final();
+	std::cout << "CRC32 hash: " << Botan::hex_encode(returnHash) << std::endl;
+	return returnHash;
 }
 
 // Private

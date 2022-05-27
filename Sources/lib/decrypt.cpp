@@ -6,21 +6,72 @@
 
 #include "include/decrypt.hpp"
 
+#include <utility>
+
 // Constructor (Public)
-decrypt::decrypt(std::vector <char> image, lilog *log)
+decrypt::decrypt(lilog *log)
 {
 	this->myLog = log;
-	this->inputImage = std::move(image);
+	
+	this->inputText.clear();
+	this->inputImage.clear();
+	this->returnData.clear();
+	this->passwd = "";
+	this->runOption = 0;
+	this->hash.clear();
 	
 	LOG(myLog, 1, "Decrypt created");
 	std::cout << "Decrypt created\n";
-	decryptImage();
 }
 
 // Public
 // Functions
+void decrypt::run()
+{
+	/*
+	 * Valid options:
+	 * Text -> CRC32 of text (1)
+	 * Image -> Partial decryption (2)
+	 * Text & Passwd -> Text decryption (5)
+	 * Image & Passwd -> Full decryption (6)
+	 */
+	this->runOption = 0;
+	if (!this->inputText.empty())
+		this->runOption |= 0x1;
+	if (!this->inputImage.empty())
+		this->runOption |= 0x2;
+	if (!this->passwd.empty())
+		this->runOption |= 0x4;
+	
+	switch (this->runOption)
+	{
+		case 1: // CRC32 of text
+			this->hash = cryptLib::generateHash(this->inputText);
+			std::copy(this->hash.begin(), this->hash.end(), std::back_inserter(this->returnData));
+			break;
+		case 2: // Partial decryption
+			this->decryptImage();
+			std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(this->returnData));
+			break;
+		case 5: // Text decryption
+			this->decryptText();
+			std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(this->returnData));
+			break;
+		case 6: // Full decryption
+			this->decryptImage();
+			this->decryptText();
+			std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(this->returnData));
+			break;
+		default:
+			std::string s = "Invalid";
+			std::copy(s.begin(), s.end(), std::back_inserter(this->returnData));
+	}
+}
+
 void decrypt::decryptImage()
 {
+	LOG(this->myLog, 1, "Decrypting text from image");
+	cryptLib::colorPrint("Decrypting text from image", WAITMSG);
 	// Get image data
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	// Get info from header
@@ -37,11 +88,15 @@ void decrypt::decryptImage()
 	std::cout << "Bit per pixel = " << bitPerPixel << std::endl;
 	std::cout << "Total bits in image = " << maxChars << std::endl;
 	// Checking image compatibility
-	if (reserved != ENCRYPTED) // The image has not been encrypted by LIES
+	if (reserved == 0) // The image has not been encrypted by LIES
 	{
 		LOG(myLog, 2, "Image not encrypted by LIES");
 		cryptLib::colorPrint("Image not encrypted by LIES", ERRORCLR);
 		return;
+	}
+	else
+	{
+		std::copy(this->headerData.begin() + 6, this->headerData.begin() + 10, std::back_inserter(this->hash));
 	}
 	// Getting text
 	std::vector <char> tmpTextVector;
@@ -84,23 +139,67 @@ void decrypt::decryptImage()
 		return;
 	}
 	
-	std::copy(tmpTextVector.begin() + 1, tmpTextVector.end() - 1, std::back_inserter(this->returnText));
+	std::copy(tmpTextVector.begin() + 1, tmpTextVector.end() - 1, std::back_inserter(this->inputText));
 	
 	// Save text for testing
-	std::ofstream text("outputImage.txt", std::ios::out);
-	std::copy(this->returnText.begin(), this->returnText.end(), std::ostreambuf_iterator <char>(text));
+	std::ofstream text("outputImage.txt", std::ios::out | std::ofstream::trunc);
+	std::copy(this->inputText.begin(), this->inputText.end(), std::ostreambuf_iterator <char>(text));
 	text.close();
 }
 
-// Getters / Setters
-void decrypt::setImage(std::vector <char> image)
+void decrypt::decryptText()
 {
-	this->inputImage = std::move(image);
+	LOG(this->myLog, 1, "Decrypting text with password");
+	cryptLib::colorPrint("Decrypting text with password", WAITMSG);
+
+//	this->hash = cryptLib::generateHash(this->inputText);
+	
+	const Botan::BigInt n = 1000000000000000;
+	std::vector <uint8_t> tweak; // tweak (salt) based on text hash
+	tweak.clear();
+	if (!this->hash.empty()) // If there is a hash
+	{
+		std::cout << "Beware, here be hashes" << std::endl;
+		tweak = Botan::unlock(this->hash);
+	}
+	
+	std::cout << "Test: 01\n";
+	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+	// Decryption
+	std::cout << "Test: 02\n";
+	std::unique_ptr <Botan::Cipher_Mode> decrypt = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+	std::cout << "Test: 03\n";
+	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(decrypt->maximum_keylength(), this->passwd, tweak.data(), tweak.size(), 100000);
+	std::cout << "Test: 04\n";
+	decrypt->set_key(key);
+	std::cout << "Test: 05\n";
+	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
+	std::cout << "Test: 06\n";
+	decrypt->finish(dataVector);
+	std::cout << "Test: 07\n";
+	std::copy(dataVector.begin(), dataVector.end(), std::back_inserter(this->inputText));
+	std::cout << "Test: 08\n";
 }
 
-std::vector <char> decrypt::getText()
+// Getters / Setters
+void decrypt::setImage(std::vector <char> setTo)
 {
-	return returnText;
+	this->inputImage = std::move(setTo);
+}
+
+void decrypt::setText(std::vector <char> setTo)
+{
+	this->inputText = std::move(setTo);
+}
+
+void decrypt::setPasswd(std::string setTo)
+{
+	this->passwd = std::move(setTo);
+}
+
+std::vector <char> decrypt::getData()
+{
+	return returnData;
 }
 
 // Protected

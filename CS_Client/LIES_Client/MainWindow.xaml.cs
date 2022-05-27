@@ -24,8 +24,11 @@ using System.IO;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Security;
+using Image = System.Drawing.Image;
 using Path = System.IO.Path;
-using Vector = System.Windows.Vector;
 
 namespace LIES_Client
 {
@@ -169,6 +172,7 @@ namespace LIES_Client
             check = mask & checkOptions;
             if (check != 0)
             {
+                /**
                 FileStream fs = File.OpenRead(image);
                 byte[] b = new byte[fs.Length];
                 UTF8Encoding temp = new UTF8Encoding(true);
@@ -177,15 +181,46 @@ namespace LIES_Client
                 {
                     imageToSend += temp.GetString(b);
                 }
+                **/
                 /**
                 var fs = new FileStream(image, FileMode.Open);
                 var fileData = new byte[fs.Length];
                 fs.Read(fileData, 0, fileData.Length);
                 fs.Close();
-
-                 = new string(Encoding.ASCII.GetChars(fileData));
                 **/
-                message += "ImageLength=" + imageToSend.Length + ":Image=" + imageToSend; // System.Text.Encoding.UTF8.GetString(fileData)
+                /**
+                string line;
+                var imageReader = new StreamReader(image, Encoding.Default, true);
+                var imageList = new List<char>();
+                Console.WriteLine(@"Testing image");
+                while (imageReader.Peek() > -1)
+                {
+                    line = imageReader.ReadLine();
+                    foreach (char c in line)
+                    {
+                        Console.WriteLine(c);
+                        imageList.Add(c);
+                    }
+                }
+
+                var imageArray = imageList.ToArray();
+                **/
+                /**
+                MemoryStream ms = new MemoryStream();
+                Bitmap bm = new Bitmap(image);
+                bm.Save(ms, ImageFormat.Jpeg);
+                var imageString = Convert.ToBase64String(ms.ToArray());
+                StreamWriter sw = new StreamWriter(@"D:\Deze PC\Documenten\GitHub\Project_TBD\cmake-build-debug\temp.txt", false);
+                sw.Write(imageString);
+                sw.Close();
+                **/
+
+                Bitmap bm = (Bitmap)Image.FromFile(image);
+                string bmString = bm.ToString();
+
+                //string imageToSend = new string(Encoding.ASCII.GetChars(fileData));
+
+                message += "ImageLength=" + bmString.Length + ":Image=" + bmString; // System.Text.Encoding.UTF8.GetString(fileData)
 
                 //Print(System.Text.Encoding.Default.GetString(fileData));
             }
@@ -193,13 +228,13 @@ namespace LIES_Client
             //Print(message);
 
             Print("Encrypting data");
-            
+
 
 
 
             Print("Sending data");
             var output = OutputTextBox.Text;
-            
+
             returnMessage = string.Empty;
             message = message.Remove(message.Length - 1);
 

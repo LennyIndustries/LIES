@@ -6,32 +6,80 @@
 
 #include "include/encrypt.hpp"
 
+#include <utility>
+
 // Constructor (Public)
-encrypt::encrypt(std::vector <char> image, std::vector <char> message, lilog *log)
+encrypt::encrypt(lilog *log)
 {
 	this->myLog = log;
-	this->inputImage = std::move(image);
-	this->text = std::move(message);
+	
+	this->inputText.clear();
+	this->inputImage.clear();
+	this->returnData.clear();
+	this->passwd = "";
+	this->runOption = 0;
+	this->hash.clear();
 	
 	LOG(myLog, 1, "Encrypt created");
 	std::cout << "Encrypt created\n";
-	encryptImage();
 }
 
 // Public
 // Functions
+void encrypt::run()
+{
+	/*
+	 * Valid options:
+	 * Text -> CRC32 of text (1)
+	 * Image -> CRC32 of image (2)
+	 * Text & Image -> Partial encryption (3)
+	 * Text & Passwd -> Text encryption (5)
+	 * Text & Image & Passwd -> Full encryption (7)
+	 */
+	if (!this->inputText.empty())
+		this->runOption |= 0x1;
+	if (!this->inputImage.empty())
+		this->runOption |= 0x2;
+	if (!this->passwd.empty())
+		this->runOption |= 0x4;
+	
+	switch (this->runOption)
+	{
+		case 1: // CRC32 of text
+			this->hash = cryptLib::generateHash(this->inputText);
+			std::copy(this->hash.begin(), this->hash.end(), std::back_inserter(this->returnData));
+			break;
+		case 2: // CRC32 of image
+			this->hash = cryptLib::generateHash(this->inputImage);
+			std::copy(this->hash.begin(), this->hash.end(), std::back_inserter(this->returnData));
+			break;
+		case 3: // Partial encryption
+			this->hash = cryptLib::generateHash(this->inputText);
+			this->encryptImage();
+			std::copy(this->inputImage.begin(), this->inputImage.end(), std::back_inserter(this->returnData));
+			break;
+		case 5: // Text encryption
+			this->encryptText();
+			std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(this->returnData));
+			break;
+		case 7: // Full encryption
+			this->encryptText();
+			this->encryptImage();
+			std::copy(this->inputImage.begin(), this->inputImage.end(), std::back_inserter(this->returnData));
+			break;
+		default:
+			std::string s = "Invalid";
+			std::copy(s.begin(), s.end(), std::back_inserter(this->returnData));
+	}
+}
+
 void encrypt::encryptImage()
 {
+	LOG(this->myLog, 1, "Encrypting text in image");
+	cryptLib::colorPrint("Encrypting text in image", WAITMSG);
 	// Get image data
-	std::cout << "Getting image data\n";
-//	std::cout << cryptLib::printableVector(this->inputImage);
-	std::ofstream debug("outputImage.bmp", std::ios::out | std::ofstream::binary);
-	std::copy(this->inputImage.begin(), this->inputImage.end(), std::ostreambuf_iterator <char>(debug));
-	debug.close();
-	return;
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	// Get info from header
-	std::cout << "Getting header info\n";
 	// http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm
 	int reserved = *(int *) &this->headerData[6];
 	int with = *(int *) &this->headerData[18];
@@ -45,37 +93,34 @@ void encrypt::encryptImage()
 	std::cout << "Bit per pixel = " << bitPerPixel << std::endl;
 	std::cout << "Maximum characters in image = " << maxChars << std::endl;
 	// Checking image and text compatibility
-	std::cout << "Checking compatibility\n";
 	if (bitPerPixel < 8) // If pixel depth is not enough the program will visibly alter the image
 	{
-		LOG(myLog, 2, "Pixel depth is too low: %i", bitPerPixel);
+		LOG(this->myLog, 2, "Pixel depth is too low: %i", bitPerPixel);
 		cryptLib::colorPrint("Pixel depth is too low", ERRORCLR);
 		return;
 	}
-	if (text.size() > maxChars) // The total amount of characters in the text can not be put in the image
+	if (this->inputText.size() > maxChars) // The total amount of characters in the text can not be put in the image
 	{
-		LOG(myLog, 2, "Character count too high: %i > %i", text.size(), maxChars);
+		LOG(this->myLog, 2, "Character count too high: %i > %i", this->inputText.size(), maxChars);
 		cryptLib::colorPrint("Character count too high", ERRORCLR);
 		return;
 	}
-	if (reserved == ENCRYPTED) // The image has already been encrypted
+	if (reserved != 0) // The image has already been encrypted. We put the text hash in here
 	{
-		LOG(myLog, 2, "Image already encrypted");
-		cryptLib::colorPrint("Image already encrypted", ERRORCLR);
+		LOG(this->myLog, 2, "Image already encrypted or incompatible");
+		cryptLib::colorPrint("Image already encrypted or incompatible", ERRORCLR);
 		return;
 	}
 	// Write the text to the image, prep
-	std::cout << "Prepping write\n";
 	std::vector <char> textToWrite; // Vector with all the text and tags
 	textToWrite.push_back(STX); // Start tag
-	std::copy(this->text.begin(), this->text.end(), std::back_inserter(textToWrite)); // Text
+	std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(textToWrite)); // Text
 	textToWrite.push_back(ETX); // End tag
 	// Variables
 	unsigned char mask = 0x80;
 	unsigned char storageText = 0x00;
 	unsigned char storageImage = 0x00;
 	// Encrypt the text in the image
-	std::cout << "Writing\n";
 	for (unsigned int i = 0; i < textToWrite.size(); i++) // Loop trough all the text
 	{
 		for (unsigned int j = 0; j < 8; j++) // Byte loop
@@ -85,36 +130,69 @@ void encrypt::encryptImage()
 			this->imageData[j + (8 * i)] = (char) (storageImage | storageText);
 		}
 	}
-	// Set ENCRYPT flag in header
-	std::cout << "Setting flag\n";
-	this->headerData[6] = ENCRYPTED;
-	// Write it all to returnImage
-	std::cout << "Writing return image\n";
-	std::copy(this->headerData.begin(), this->headerData.end(), std::back_inserter(this->returnImage)); // Copy the header
-	std::copy(this->imageData.begin(), this->imageData.end(), std::back_inserter(this->returnImage)); // Copy the image
+	// Setting hash in header
+	std::vector <unsigned char> tmpHash = Botan::unlock(this->hash);
+	this->headerData[6] = tmpHash[0];
+	this->headerData[7] = tmpHash[1];
+	this->headerData[8] = tmpHash[2];
+	this->headerData[9] = tmpHash[3];
+	// Write it all back
+	std::copy(this->headerData.begin(), this->headerData.end(), std::back_inserter(this->inputImage)); // Copy the header
+	std::copy(this->imageData.begin(), this->imageData.end(), std::back_inserter(this->inputImage)); // Copy the image
 	// Save image for testing
-	std::cout << "Saving for debug\n";
 	std::ofstream image("outputImage.bmp", std::ios::out | std::ofstream::binary);
 	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator <char>(image));
 	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator <char>(image));
 	image.close();
-	std::cout << "Done\n";
+}
+
+void encrypt::encryptText()
+{
+	LOG(this->myLog, 1, "Encrypting text with password");
+	cryptLib::colorPrint("Encrypting text with password", WAITMSG);
+	
+	this->hash = cryptLib::generateHash(this->inputText);
+	
+	const Botan::BigInt n = 1000000000000000;
+	std::vector <uint8_t> tweak = Botan::unlock(this->hash); // tweak (salt) based on text hash
+	if (this->runOption == 5) // If only encrypting text, do not use hash as salt, it is unknown at decrypt
+	{
+		tweak.clear();
+	}
+	
+	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+	// Encryption
+	std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), this->passwd, tweak.data(), tweak.size(), 100000);
+	encryption->set_key(key);
+	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
+	encryption->finish(dataVector);
+	std::copy(dataVector.begin(), dataVector.end(), std::back_inserter(this->inputText));
+	
+	std::cout << "Encrypted text: " << cryptLib::printableVector(this->inputText) << std::endl;
 }
 
 // Getters / Setters
-void encrypt::setImage(std::vector <char> image)
+void encrypt::setImage(std::vector <char> setTo)
 {
-	this->inputImage = std::move(image);
+	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputImage));
+//	this->inputImage = std::move(setTo);
 }
 
-void encrypt::setText(std::vector <char> message)
+void encrypt::setText(std::vector <char> setTo)
 {
-	this->text = std::move(message);
+	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputText));
+//	this->inputText = std::move(setTo);
 }
 
-std::vector <char> encrypt::getImage()
+void encrypt::setPasswd(std::string setTo)
 {
-	return returnImage;
+	this->passwd = std::move(setTo);
+}
+
+std::vector <char> encrypt::getData()
+{
+	return returnData;
 }
 
 // Protected

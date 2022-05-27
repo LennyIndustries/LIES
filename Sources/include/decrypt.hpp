@@ -24,20 +24,29 @@ class decrypt : private cryptLib
 {
 public:
 	// Con- Destructor
-	decrypt(std::vector <char> image, lilog *log);
+	decrypt(lilog *log);
 	~decrypt();
 	// Functions
-	void decryptImage();
+	void run();
 	// Getters / Setters
-	void setImage(std::vector <char> image);
-	std::vector <char> getText();
+	void setImage(std::vector <char> setTo);
+	void setText(std::vector <char> setTo);
+	void setPasswd(std::string setTo);
+	std::vector <char> getData();
 protected:
 private:
+	// Functions
+	void decryptImage();
+	void decryptText();
 	// Variables
 	lilog *myLog;
-	std::vector <char> inputImage;
-	std::vector <char> returnText;
+	std::vector <char> inputText, inputImage, returnData;
+	std::string passwd;
+	
 	std::vector <char> headerData, imageData;
+	
+	char runOption;
+	Botan::secure_vector<uint8_t> hash;
 };
 
 
