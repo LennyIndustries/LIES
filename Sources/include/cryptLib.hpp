@@ -19,6 +19,8 @@
 #include <cstring>
 #include <vector>
 #include <Windows.h>
+#include <utility>
+#include <fstream>
 // Botan
 #include <botan/botan.h>
 #include <botan/uuid.h>

@@ -14,10 +14,6 @@
 // Libraries
 #include "cryptLib.hpp"
 
-#include <vector>
-#include <utility>
-#include <fstream>
-
 // Definitions
 
 class decrypt : private cryptLib

@@ -115,91 +115,91 @@ int main(int argc, char **argv)
 	// WARNING printing key is unsafe
 	std::cout << "Keys:\n" << keyPrivate_unsecure << keyPublic_unsecure;
 	
-	Botan::DataSource_Memory DSMPrivate(keyPrivate_unsecure);
-	Botan::DataSource_Memory DSMPublic(keyPublic_unsecure);
-	
-	Botan::PKCS8_PrivateKey *PKCS8Key_Private;
-	Botan::X509_PublicKey *X509Key_public;
-	
-	try
-	{
-		PKCS8Key_Private = Botan::PKCS8::load_key(DSMPrivate, rng);
-		X509Key_public = Botan::X509::load_key(DSMPublic);
-		
-		if ((!PKCS8Key_Private->check_key(rng, true)) || (!X509Key_public->check_key(rng, true)))
-		{
-			cryptLib::colorPrint("Keys failed check", ERRORCLR);
-			delete PKCS8Key_Private;
-			delete X509Key_public;
-			throw std::invalid_argument("Loaded keys are invalid");
-		}
-	}
-	catch (const std::exception &e)
-	{
-		LOG(myLog, 2, e.what());
-		cryptLib::colorPrint(e.what(), ERRORCLR);
-		return ERR_2;
-	}
-	
-	std::unique_ptr <Botan::Private_Key> privateKey(PKCS8Key_Private);
-	std::unique_ptr <Botan::Public_Key> publicKey(X509Key_public);
+//	Botan::DataSource_Memory DSMPrivate(keyPrivate_unsecure);
+//	Botan::DataSource_Memory DSMPublic(keyPublic_unsecure);
+//
+//	Botan::PKCS8_PrivateKey *PKCS8Key_Private;
+//	Botan::X509_PublicKey *X509Key_public;
+//
+//	try
+//	{
+//		PKCS8Key_Private = Botan::PKCS8::load_key(DSMPrivate, rng);
+//		X509Key_public = Botan::X509::load_key(DSMPublic);
+//
+//		if ((!PKCS8Key_Private->check_key(rng, true)) || (!X509Key_public->check_key(rng, true)))
+//		{
+//			cryptLib::colorPrint("Keys failed check", ERRORCLR);
+//			delete PKCS8Key_Private;
+//			delete X509Key_public;
+//			throw std::invalid_argument("Loaded keys are invalid");
+//		}
+//	}
+//	catch (const std::exception &e)
+//	{
+//		LOG(myLog, 2, e.what());
+//		cryptLib::colorPrint(e.what(), ERRORCLR);
+//		return ERR_2;
+//	}
+//
+//	Botan::Private_Key *privateKey(PKCS8Key_Private);
+//	std::unique_ptr <Botan::Public_Key> publicKey(X509Key_public);
 	
 	// Encryption testing
-	{ // Don't need any of this later
-		cryptLib::colorPrint("Testing keys:", WAITMSG);
-		std::cout << "Private: " << privateKey.get() << "\nPublic: " << publicKey.get() << std::endl;
-		// Base text
-		std::string plainText = "He had accidentally hacked into his company's server.";
-		std::vector <uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
-		// Encryption
-		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME-PKCS1-v1_5");
-		std::vector <uint8_t> enc_t = enc.encrypt(pt, rng);
-		// Decrypt
-		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME-PKCS1-v1_5");
-		std::vector <uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
-
-		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;
-		cryptLib::colorPrint("Maximum encrypt size: " +
-							 std::to_string(enc.maximum_input_size()), ALTMSGCLR); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
-
-		cryptLib::colorPrint("Testing hash:", WAITMSG);
-		std::unique_ptr <Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
-		crc32->update(plainText);
-		Botan::secure_vector <uint8_t> hashOut = crc32->final();
-		std::cout << "CRC32 hash: " << Botan::hex_encode(hashOut) << "\n should be equal to 'B62C54AB'" << std::endl;
-
-		cryptLib::colorPrint("Testing text encryption:", WAITMSG);
-		const Botan::BigInt n = 1000000000000000;
-		std::string pass = "Testing"; // A password, given by the user
-		const std::vector <uint8_t> tweak = Botan::unlock(hashOut); // tweak based on text hash
-		std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
-		// Encryption
-		std::unique_ptr <Botan::Cipher_Mode> encFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
-		Botan::secure_vector <uint8_t> pbkdfKey = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
-		encFPE->set_key(pbkdfKey);
-//		Botan::secure_vector<uint8_t> ivFPE = rng.random_vec(encFPE->default_nonce_length());
-		plainText += " Some more and longer text. This text needs to be longer so it can be used to test the encryption, if it is not long enough text send to the server might fail as well. Also We'll use this method of encryption to encrypt the text and image data send to and from the server having only RSA encryption on the key to encrypt and dercypt the data send.";// + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server.";
-		Botan::secure_vector <uint8_t> ptFPE(plainText.data(), plainText.data() + plainText.length());
-//		encFPE->start(ivFPE);
-		encFPE->finish(ptFPE);
-		std::cout << "Encrypted:\n" << "Not shown, random data" << std::endl;
-
-		// Encryption of the key with RSA
+//	{ // Don't need any of this later
+//		cryptLib::colorPrint("Testing keys:", WAITMSG);
+//		std::cout << "Private: " << privateKey.get() << "\nPublic: " << publicKey.get() << std::endl;
+//		// Base text
+//		std::string plainText = "He had accidentally hacked into his company's server.";
+//		std::vector <uint8_t> pt(plainText.data(), plainText.data() + plainText.length());
+//		// Encryption
+//		Botan::PK_Encryptor_EME enc(*publicKey, rng, "EME-PKCS1-v1_5");
+//		std::vector <uint8_t> enc_t = enc.encrypt(pt, rng);
+//		// Decrypt
+//		Botan::PK_Decryptor_EME dec(*privateKey, rng, "EME-PKCS1-v1_5");
+//		std::vector <uint8_t> dec_t = Botan::unlock(dec.decrypt(enc_t));
+//
+//		std::cout << "Start String:\n" << plainText << "\nStart vector:\n" << pt.data() << "\nEncrypted:\n" << "Not shown, random data" << "\nDecrypted:\n" << dec_t.data() << std::endl;
+//		cryptLib::colorPrint("Maximum encrypt size: " +
+//							 std::to_string(enc.maximum_input_size()), ALTMSGCLR); // Large files: https://stackoverflow.com/questions/13777902/how-to-get-encryption-decryption-progress-when-encrypt-big-files-with-botan-in-q
+//
+//		cryptLib::colorPrint("Testing hash:", WAITMSG);
+//		std::unique_ptr <Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));
+//		crc32->update(plainText);
+//		Botan::secure_vector <uint8_t> hashOut = crc32->final();
+//		std::cout << "CRC32 hash: " << Botan::hex_encode(hashOut) << "\n should be equal to 'B62C54AB'" << std::endl;
+//
+//		cryptLib::colorPrint("Testing text encryption:", WAITMSG);
+//		const Botan::BigInt n = 1000000000000000;
+//		std::string pass = "Testing"; // A password, given by the user
+//		const std::vector <uint8_t> tweak = Botan::unlock(hashOut); // tweak based on text hash
+//		std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+//		// Encryption
+//		std::unique_ptr <Botan::Cipher_Mode> encFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+//		Botan::secure_vector <uint8_t> pbkdfKey = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
+//		encFPE->set_key(pbkdfKey);
+////		Botan::secure_vector<uint8_t> ivFPE = rng.random_vec(encFPE->default_nonce_length());
+//		plainText += " Some more and longer text. This text needs to be longer so it can be used to test the encryption, if it is not long enough text send to the server might fail as well. Also We'll use this method of encryption to encrypt the text and image data send to and from the server having only RSA encryption on the key to encrypt and dercypt the data send.";// + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server." + "He had accidentally hacked into his company's server.";
+//		Botan::secure_vector <uint8_t> ptFPE(plainText.data(), plainText.data() + plainText.length());
+////		encFPE->start(ivFPE);
+//		encFPE->finish(ptFPE);
+//		std::cout << "Encrypted:\n" << "Not shown, random data" << std::endl;
+//
+//		// Encryption of the key with RSA
 //		Botan::PK_Encryptor_EME encKey(*publicKey, rng, "EME-PKCS1-v1_5");
 //		std::vector <uint8_t> encKey_t = enc.encrypt(pbkdfKey, rng);
 //
 //		Botan::PK_Decryptor_EME decKey(*privateKey, rng, "EME-PKCS1-v1_5");
 //		std::vector <uint8_t> decKey_t = Botan::unlock(dec.decrypt(encKey_t));
-
-		// Decryption
-		Botan::secure_vector <uint8_t> pbkdfKey2 = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
-		std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-		decFPE->set_key(pbkdfKey2);
-//		decFPE->start(ivFPE);
-		decFPE->finish(ptFPE);
-		Botan::secure_vector <uint8_t> out(ptFPE.begin(), ptFPE.end());
-		std::cout << "Decrypted:\n" << out.data() << std::endl;
-	}
+//
+//		// Decryption
+//		Botan::secure_vector <uint8_t> pbkdfKey2 = pbkdf->pbkdf_iterations(encFPE->maximum_keylength(), pass, tweak.data(), tweak.size(), 100000);
+//		std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+//		decFPE->set_key(pbkdfKey2);
+////		decFPE->start(ivFPE);
+//		decFPE->finish(ptFPE);
+//		Botan::secure_vector <uint8_t> out(ptFPE.begin(), ptFPE.end());
+//		std::cout << "Decrypted:\n" << out.data() << std::endl;
+//	}
 	
 	// Connecting benternet
 	try
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 			
 			if ((cryptLib::vectorCompare(function, "Encrypt")) || (cryptLib::vectorCompare(function, "Decrypt")))
 			{
-				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator);
+				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator, keyPrivate_unsecure);
 			}
 			else if (cryptLib::vectorCompare(function, "Key"))
 			{

@@ -1,0 +1,25 @@
+Encrypt & Image & Text & Passwd -> full encryption  : Image
+Encrypt & Image & Text -> partial encryption        : Image
+Encrypt & Text & Passwd -> encryption of text only  : Text
+
+Decrypt & Image & Passwd -> full decryption         : Text
+Decrypt & Image -> partial decryption               : Text
+Decrypt & Text & Passwd -> decryption of text only  : Text
+
+Encrypt/Decrypt & Text -> CRC32 of text             : CRC32
+Encrypt & Image -> CRC32 of image                   : CRC32
+
+Client
+-encrypt -image TestImage10x10.bmp -text TestFile_Small.txt -passwd test -internet -log LIES.log  : Full encryption, Image
+-encrypt -image TestImage10x10.bmp -text TestFile_Small.txt -internet -log LIES.log               : Partial encryption, Image
+-encrypt -text TestFile_Small.txt -passwd test -internet -log LIES.log                            : Encryption of text only, Text
+-encrypt -text TestFile_Small.txt -internet -log LIES.log                                         : CRC32 of text, Text
+-encrypt -image TestImage10x10.bmp -internet -log LIES.log                                        : CRC32 of image, Text
+
+-decrypt -image outputImage.bmp -passwd test -internet -log LIES.log                              : Full decryption, Text
+-decrypt -image outputImage.bmp -internet -log LIES.log                                           : Partial decryption, Text
+-decrypt -text outputImage.txt -passwd test -internet -log LIES.log                               : Decryption of text only, Text; NOTE: Does not work
+-decrypt -text TestFile_Small.txt -internet -log LIES.log                                         : CRC32 of text, Text
+
+Server
+-internet -log LIES.log -keyBits 2048

@@ -132,11 +132,13 @@ void encrypt::encryptImage()
 	}
 	// Setting hash in header
 	std::vector <unsigned char> tmpHash = Botan::unlock(this->hash);
+	std::cout << "Inserting hash into header\n";
 	this->headerData[6] = tmpHash[0];
 	this->headerData[7] = tmpHash[1];
 	this->headerData[8] = tmpHash[2];
 	this->headerData[9] = tmpHash[3];
 	// Write it all back
+	this->inputImage.clear();
 	std::copy(this->headerData.begin(), this->headerData.end(), std::back_inserter(this->inputImage)); // Copy the header
 	std::copy(this->imageData.begin(), this->imageData.end(), std::back_inserter(this->inputImage)); // Copy the image
 	// Save image for testing
@@ -157,6 +159,7 @@ void encrypt::encryptText()
 	std::vector <uint8_t> tweak = Botan::unlock(this->hash); // tweak (salt) based on text hash
 	if (this->runOption == 5) // If only encrypting text, do not use hash as salt, it is unknown at decrypt
 	{
+		std::cout << "Cleaning salt\n";
 		tweak.clear();
 	}
 	
@@ -167,9 +170,8 @@ void encrypt::encryptText()
 	encryption->set_key(key);
 	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
 	encryption->finish(dataVector);
+	this->inputText.clear();
 	std::copy(dataVector.begin(), dataVector.end(), std::back_inserter(this->inputText));
-	
-	std::cout << "Encrypted text: " << cryptLib::printableVector(this->inputText) << std::endl;
 }
 
 // Getters / Setters

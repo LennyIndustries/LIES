@@ -142,6 +142,7 @@ void decrypt::decryptImage()
 	std::copy(tmpTextVector.begin() + 1, tmpTextVector.end() - 1, std::back_inserter(this->inputText));
 	
 	// Save text for testing
+	std::cout << "Saving text for debug" << std::endl;
 	std::ofstream text("outputImage.txt", std::ios::out | std::ofstream::trunc);
 	std::copy(this->inputText.begin(), this->inputText.end(), std::ostreambuf_iterator <char>(text));
 	text.close();
@@ -162,23 +163,15 @@ void decrypt::decryptText()
 		std::cout << "Beware, here be hashes" << std::endl;
 		tweak = Botan::unlock(this->hash);
 	}
-	
-	std::cout << "Test: 01\n";
 	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
 	// Decryption
-	std::cout << "Test: 02\n";
 	std::unique_ptr <Botan::Cipher_Mode> decrypt = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-	std::cout << "Test: 03\n";
 	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(decrypt->maximum_keylength(), this->passwd, tweak.data(), tweak.size(), 100000);
-	std::cout << "Test: 04\n";
 	decrypt->set_key(key);
-	std::cout << "Test: 05\n";
 	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
-	std::cout << "Test: 06\n";
 	decrypt->finish(dataVector);
-	std::cout << "Test: 07\n";
+	this->inputText.clear();
 	std::copy(dataVector.begin(), dataVector.end(), std::back_inserter(this->inputText));
-	std::cout << "Test: 08\n";
 }
 
 // Getters / Setters
