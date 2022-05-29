@@ -30,32 +30,32 @@ class connectionHandler
 {
 public:
 	// Con- Destructor
-	static connectionHandler *create(std::vector <char> &function, std::vector <char> &message, lilog *log, zmq::socket_t *vent, std::string key);
+	static connectionHandler *create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key);
 	void kill();
 	// Getters / Setters
 	[[nodiscard]] Botan::UUID getUUID() const;
 protected:
 private:
 	// Con- Destructor
-	connectionHandler(std::vector <char> &function, const std::vector <char> &message, lilog *log, zmq::socket_t *vent, std::string key);
+	connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key);
 	~connectionHandler();
 	// Functions
 	void handle();
 	bool messageSolver();
 	
-	bool handleTextLength(std::vector <char> &storage, size_t &equalsPosition);
-	bool handleText(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	bool handleTextLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
+	bool handleText(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
 	
-	bool handleImageLength(std::vector <char> &storage, size_t &equalsPosition);
-	bool handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	bool handleImageLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
+	bool handleImage(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
 	
-	bool handleKeyLength(std::vector <char> &storage, size_t &equalsPosition);
-	bool handleKey(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	bool handleKeyLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
+	bool handleKey(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
 	
-	bool handlePasswordLength(std::vector <char> &storage, size_t &equalsPosition);
-	bool handlePassword(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition);
+	bool handlePasswordLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
+	bool handlePassword(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
 	
-	bool handleUuid(std::vector <char> &storage, size_t &equalsPosition);
+	bool handleUuid(std::vector <uint8_t> &storage, size_t &equalsPosition);
 	
 	bool decryptKey();
 	void decryptData();
@@ -67,15 +67,12 @@ private:
 	zmq::socket_t *myVent;
 	std::string myKeyString;
 	
-	std::vector <char> function;
-	std::vector <char> message;
+	std::vector <uint8_t> function, message;
 	
-	std::vector <char> messageCommand;
-	std::vector <char> messageArgument;
+	std::vector <uint8_t> messageCommand, messageArgument;
 	
 	int textLength, imageLength, keyLength, passwdLength;
-	std::vector <char> text, image, passwd;
-	std::vector <unsigned char> key;
+	std::vector <uint8_t> text, image, passwd, key;
 	
 	Botan::UUID uuid;
 	

@@ -12,7 +12,7 @@
 #include "include/connectionHandler.hpp"
 
 // Constructor (Private)
-connectionHandler::connectionHandler(std::vector <char> &function, const std::vector <char> &message, lilog *log, zmq::socket_t *vent, std::string key)
+connectionHandler::connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key)
 {
 	// Passed values
 	this->function = function;
@@ -36,7 +36,7 @@ connectionHandler::connectionHandler(std::vector <char> &function, const std::ve
 
 // Public
 // "Constructor"
-connectionHandler *connectionHandler::create(std::vector <char> &function, std::vector <char> &message, lilog *log, zmq::socket_t *vent, std::string key)
+connectionHandler *connectionHandler::create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key)
 {
 	return new connectionHandler(function, message, log, vent, std::move(key));
 }
@@ -156,8 +156,8 @@ void connectionHandler::handle()
 bool connectionHandler::messageSolver()
 {
 	// Steps through possible functions and returns a number for them
-	std::vector <char> storage;
-	std::vector <char> rest;
+	std::vector <uint8_t> storage;
+	std::vector <uint8_t> rest;
 	std::size_t colonPosition = 0;
 	std::size_t equalsPosition;
 	
@@ -263,9 +263,9 @@ bool connectionHandler::messageSolver()
 	return true;
 }
 
-bool connectionHandler::handleTextLength(std::vector <char> &storage, size_t &equalsPosition)
+bool connectionHandler::handleTextLength(std::vector <uint8_t> &storage, size_t &equalsPosition)
 {
-	std::vector <char> tmpVector;
+	std::vector <uint8_t> tmpVector;
 	
 	tmpVector.clear();
 	tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -284,9 +284,9 @@ bool connectionHandler::handleTextLength(std::vector <char> &storage, size_t &eq
 	return true;
 }
 
-bool connectionHandler::handleText(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition)
+bool connectionHandler::handleText(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition)
 {
-	std::vector <char> tempRestVector;
+	std::vector <uint8_t> tempRestVector;
 	if (!rest.empty()) // If there is something left add it back to storage
 	{
 		tempRestVector.clear();
@@ -307,7 +307,7 @@ bool connectionHandler::handleText(std::vector <char> &storage, std::vector <cha
 	
 	this->text.clear();
 	
-	std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->textLength);
+	std::vector <uint8_t> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->textLength);
 	std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->text));
 	
 	tempRestVector.clear();
@@ -326,9 +326,9 @@ bool connectionHandler::handleText(std::vector <char> &storage, std::vector <cha
 	return true;
 }
 
-bool connectionHandler::handleImageLength(std::vector <char> &storage, size_t &equalsPosition)
+bool connectionHandler::handleImageLength(std::vector <uint8_t> &storage, size_t &equalsPosition)
 {
-	std::vector <char> tmpVector;
+	std::vector <uint8_t> tmpVector;
 	
 	tmpVector.clear();
 	tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -347,9 +347,9 @@ bool connectionHandler::handleImageLength(std::vector <char> &storage, size_t &e
 	return true;
 }
 
-bool connectionHandler::handleImage(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition)
+bool connectionHandler::handleImage(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition)
 {
-	std::vector <char> tempRestVector;
+	std::vector <uint8_t> tempRestVector;
 	if (!rest.empty()) // If there is something left add it back to storage
 	{
 		tempRestVector.clear();
@@ -368,7 +368,7 @@ bool connectionHandler::handleImage(std::vector <char> &storage, std::vector <ch
 		return false; // Do something to stop the program from continuing.
 	}
 	
-	std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->imageLength);
+	std::vector <uint8_t> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->imageLength);
 	std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->image));
 	
 	tempRestVector.clear();
@@ -387,9 +387,9 @@ bool connectionHandler::handleImage(std::vector <char> &storage, std::vector <ch
 	return true;
 }
 
-bool connectionHandler::handleKeyLength(std::vector <char> &storage, size_t &equalsPosition)
+bool connectionHandler::handleKeyLength(std::vector <uint8_t> &storage, size_t &equalsPosition)
 {
-	std::vector <char> tmpVector;
+	std::vector <uint8_t> tmpVector;
 	
 	tmpVector.clear();
 	tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -408,9 +408,9 @@ bool connectionHandler::handleKeyLength(std::vector <char> &storage, size_t &equ
 	return true;
 }
 
-bool connectionHandler::handleKey(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition)
+bool connectionHandler::handleKey(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition)
 {
-	std::vector <char> tempRestVector;
+	std::vector <uint8_t> tempRestVector;
 	if (!rest.empty()) // If there is something left add it back to storage
 	{
 		tempRestVector.clear();
@@ -429,7 +429,7 @@ bool connectionHandler::handleKey(std::vector <char> &storage, std::vector <char
 		return false; // Do something to stop the program from continuing.
 	}
 	
-	std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->keyLength);
+	std::vector <uint8_t> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->keyLength);
 	std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->key));
 	
 	tempRestVector.clear();
@@ -448,9 +448,9 @@ bool connectionHandler::handleKey(std::vector <char> &storage, std::vector <char
 	return true;
 }
 
-bool connectionHandler::handlePasswordLength(std::vector <char> &storage, size_t &equalsPosition)
+bool connectionHandler::handlePasswordLength(std::vector <uint8_t> &storage, size_t &equalsPosition)
 {
-	std::vector <char> tmpVector;
+	std::vector <uint8_t> tmpVector;
 	
 	tmpVector.clear();
 	tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -469,9 +469,9 @@ bool connectionHandler::handlePasswordLength(std::vector <char> &storage, size_t
 	return true;
 }
 
-bool connectionHandler::handlePassword(std::vector <char> &storage, std::vector <char> &rest, size_t &equalsPosition)
+bool connectionHandler::handlePassword(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition)
 {
-	std::vector <char> tempRestVector;
+	std::vector <uint8_t> tempRestVector;
 	if (!rest.empty()) // If there is something left add it back to storage
 	{
 		tempRestVector.clear();
@@ -490,7 +490,7 @@ bool connectionHandler::handlePassword(std::vector <char> &storage, std::vector 
 		return false; // Do something to stop the program from continuing.
 	}
 	
-	std::vector <char> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->passwdLength);
+	std::vector <uint8_t> storageSubstr = cryptLib::subVector(storage, equalsPosition + 1, this->passwdLength);
 	std::copy(storageSubstr.begin(), storageSubstr.end(), std::back_inserter(this->passwd));
 	
 	tempRestVector.clear();
@@ -509,9 +509,9 @@ bool connectionHandler::handlePassword(std::vector <char> &storage, std::vector 
 	return true;
 }
 
-bool connectionHandler::handleUuid(std::vector <char> &storage, size_t &equalsPosition)
+bool connectionHandler::handleUuid(std::vector <uint8_t> &storage, size_t &equalsPosition)
 {
-	std::vector <char> tmpVector;
+	std::vector <uint8_t> tmpVector;
 	
 	tmpVector.clear();
 	tmpVector = cryptLib::subVector(storage, equalsPosition + 1);
@@ -533,6 +533,11 @@ bool connectionHandler::handleUuid(std::vector <char> &storage, size_t &equalsPo
 bool connectionHandler::decryptKey()
 {
 	cryptLib::colorPrint("Decrypting key", MSGCLR);
+	// Debug key hash
+	std::vector <uint8_t> keyToHash;
+	std::copy(this->key.begin(), this->key.end(), std::back_inserter(keyToHash));
+	std::cout << "Key hash:\n";
+	cryptLib::generateHash(keyToHash);
 	// Decrypt prep
 	Botan::AutoSeeded_RNG rngTest;
 	Botan::DataSource_Memory DSMPrivate(this->myKeyString);
@@ -561,22 +566,29 @@ bool connectionHandler::decryptKey()
 		cryptLib::colorPrint(e.what(), ERRORCLR);
 		return false;
 	}
+	// Debug image hash
+	std::vector <uint8_t> imageToHash;
+	std::copy(this->image.begin(), this->image.end(), std::back_inserter(imageToHash));
+	std::cout << "Image hash:\n";
+	cryptLib::generateHash(imageToHash);
 	return true;
 }
 
 void connectionHandler::decryptData()
 {
 	cryptLib::colorPrint("Decrypting data", MSGCLR);
+	
+	const Botan::BigInt n = 1000000000000000;
+	std::vector <uint8_t> tweak; // No tweak (salt)
+	tweak.clear();
+	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+	std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+	decFPE->set_key(this->key);
+	
 	if (!this->text.empty())
 	{
 		try
 		{
-			const Botan::BigInt n = 1000000000000000;
-			std::vector <uint8_t> tweak; // No tweak (salt)
-			tweak.clear();
-			std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
-			std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-			decFPE->set_key(this->key);
 			Botan::secure_vector <uint8_t> ptFPE(this->text.data(), this->text.data() + this->text.size());
 			decFPE->finish(ptFPE);
 			this->text.clear();
@@ -589,28 +601,22 @@ void connectionHandler::decryptData()
 			return;
 		}
 	}
-//	if (!this->image.empty())
-//	{
-//		try
-//		{
-//			const Botan::BigInt n = 1000000000000000;
-//			std::vector <uint8_t> tweak; // No tweak (salt)
-//			tweak.clear();
-//			std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
-//			std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-//			decFPE->set_key(this->key);
-//			Botan::secure_vector <uint8_t> ptFPE(this->image.data(), this->image.data() + this->image.size());
-//			decFPE->finish(ptFPE);
-//			this->image.clear();
-//			std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(this->image));
-//		}
-//		catch (const std::exception &e)
-//		{
-//			LOG(myLog, 2, e.what());
-//			cryptLib::colorPrint(e.what(), ERRORCLR);
-//			return;
-//		}
-//	}
+	if (!this->image.empty())
+	{
+		try
+		{
+			Botan::secure_vector <uint8_t> ptFPE(this->image.data(), this->image.data() + this->image.size());
+			decFPE->finish(ptFPE);
+			this->image.clear();
+			std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(this->image));
+		}
+		catch (const std::exception &e)
+		{
+			LOG(myLog, 2, e.what());
+			cryptLib::colorPrint(e.what(), ERRORCLR);
+			return;
+		}
+	}
 }
 
 void connectionHandler::encryptCall()
@@ -629,16 +635,25 @@ void connectionHandler::encryptCall()
 	mask <<= 1;
 	check = mask & this->options;
 	if (check)
-		myEncrypt.setPasswd(cryptLib::printableVector(this->passwd));
+		myEncrypt.setPasswd(this->passwd);
 	
 	myEncrypt.run();
-	std::vector <char> returnVector;
+	std::vector <uint8_t> returnVector;
 	returnVector = myEncrypt.getData(); // Get encrypted image
 	// Prep for sending
-	std::vector <char> sendVector;
+	std::vector <uint8_t> sendVector;
 	std::string msgPrefix = "LennyIndustries|LIES_Client_" + this->uuid.to_string() + '|';
+	// Encrypting data
+	std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+	encryption->set_key(this->key);
+	Botan::secure_vector <uint8_t> dataVectorText(returnVector.data(), returnVector.data() + returnVector.size());
+	encryption->finish(dataVectorText);
+	returnVector.clear();
+	std::copy(dataVectorText.begin(), dataVectorText.end(), std::back_inserter(returnVector));
+	// Coping data
 	std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
 	std::copy(returnVector.begin(), returnVector.end(), std::back_inserter(sendVector)); // Copy data
+	// Sending
 	LOG(this->myLog, 1, "Sending data back");
 	cryptLib::colorPrint("Sending data back", ALTMSGCLR);
 	this->myVent->send(cryptLib::printableVector(sendVector).c_str(), sendVector.size());
@@ -661,14 +676,22 @@ void connectionHandler::decryptCall()
 	mask <<= 1;
 	check = mask & this->options;
 	if (check)
-		myDecrypt.setPasswd(cryptLib::printableVector(this->passwd));
+		myDecrypt.setPasswd(this->passwd);
 	
 	myDecrypt.run();
-	std::vector <char> returnVector;
+	std::vector <uint8_t> returnVector;
 	returnVector = myDecrypt.getData(); // Get decrypted text
 	// Prep for sending
-	std::vector <char> sendVector;
+	std::vector <uint8_t> sendVector;
 	std::string msgPrefix = "LennyIndustries|LIES_Client_" + this->uuid.to_string() + '|';
+	// Encrypting data
+	std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+	encryption->set_key(this->key);
+	Botan::secure_vector <uint8_t> dataVectorText(returnVector.data(), returnVector.data() + returnVector.size());
+	encryption->finish(dataVectorText);
+	returnVector.clear();
+	std::copy(dataVectorText.begin(), dataVectorText.end(), std::back_inserter(returnVector));
+	// Coping data
 	std::copy(msgPrefix.begin(), msgPrefix.end(), std::back_inserter(sendVector)); // Copy prefix
 	std::copy(returnVector.begin(), returnVector.end(), std::back_inserter(sendVector)); // Copy data
 	LOG(this->myLog, 1, "Sending text back");
