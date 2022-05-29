@@ -291,7 +291,6 @@ int main(int argc, char **argv)
 			std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(data));
 		}
 		// Filtering
-		std::cout << "Received data:\n" << data << std::endl;
 		if (data[0] == 'B' && data[1] == 'M')
 		{
 			std::ofstream output("LIES_output.bmp", std::ios::out | std::ofstream::trunc | std::ofstream::binary);
@@ -300,6 +299,7 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			std::cout << "Received data:\n" << data << std::endl;
 			std::ofstream output("LIES_output.txt", std::ios::out | std::ofstream::trunc);
 			if (passwd.empty() && ((imageVector.empty() && !textVector.empty()) || (textVector.empty() && !imageVector.empty() && encrypt)) && (data != "ERROR_OCCURRED"))
 			{
@@ -311,6 +311,7 @@ int main(int argc, char **argv)
 				data.clear();
 				std::copy(tmpOutString.begin(), tmpOutString.end(), std::back_inserter(data));
 			}
+			data.erase(std::remove(data.begin(), data.end(), '\n'), data.end()); // Voodoo, https://stackoverflow.com/questions/1488775/c-remove-new-line-from-multiline-string
 			std::copy(data.begin(), data.end(), std::ostreambuf_iterator <char>(output));
 			output.close();
 		}

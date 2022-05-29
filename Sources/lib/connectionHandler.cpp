@@ -24,8 +24,6 @@ connectionHandler::connectionHandler(std::vector <uint8_t> &function, const std:
 	// Default values
 	this->error = false;
 	this->options = 0;
-	// Checked values
-//	this->encryptSetting = cryptLib::vectorCompare(this->function, "Encrypt");
 	
 	LOG(this->myLog, 1, "Calling handle");
 	handle();

@@ -20,7 +20,7 @@ decrypt::decrypt(lilog *log)
 	this->runOption = 0;
 	this->hash.clear();
 	
-	LOG(myLog, 1, "Decrypt created");
+	LOG(this->myLog, 1, "Decrypt created");
 	std::cout << "Decrypt created\n";
 }
 
@@ -42,6 +42,8 @@ void decrypt::run()
 		this->runOption |= 0x2;
 	if (!this->passwd.empty())
 		this->runOption |= 0x4;
+	
+	this->returnData.clear();
 	
 	switch (this->runOption)
 	{
@@ -90,56 +92,51 @@ void decrypt::decryptImage()
 	// Checking image compatibility
 	if (reserved == 0) // The image has not been encrypted by LIES
 	{
-		LOG(myLog, 2, "Image not encrypted by LIES");
+		LOG(this->myLog, 2, "Image not encrypted by LIES");
 		cryptLib::colorPrint("Image not encrypted by LIES", ERRORCLR);
+		std::string error = "Image not encrypted by LIES";
+		this->inputText.clear();
+		std::copy(error.begin() + 1, error.end() - 1, std::back_inserter(this->inputText));
 		return;
 	}
 	else
 	{
 		std::copy(this->headerData.begin() + 6, this->headerData.begin() + 10, std::back_inserter(this->hash));
 	}
-	// Getting text
-	std::vector <uint8_t> tmpTextVector;
+	// Getting text length
+	unsigned short int textLength;
 	unsigned int counter = 0;
 	unsigned char indexer = 0;
 	unsigned char storage = '\0';
 	unsigned char mask = 0x01;
+	std::string textLengthString;
 	do
 	{
 		for (indexer = 0; indexer < 8; indexer++)
 		{
 			storage <<= 1;
-			storage = (storage | (imageData[indexer + (counter * 8)] & mask));
+			storage = (storage | (this->imageData[indexer + (counter * 8)] & mask));
 		}
 		counter++;
-	} while ((storage != ETX) && ((indexer + (counter * 8)) <= maxChars));
+		textLengthString += storage;
+	} while (counter < 2);
+	textLength = std::strtoul(textLengthString.c_str(), nullptr, 0);
+	// Getting text
+	std::vector <uint8_t> tmpTextVector;
 	
-	if ((storage != ETX) || (counter > maxChars))
-	{
-		LOG(myLog, 2, "Failed to find ETX");
-		cryptLib::colorPrint("Failed to find ETX", ERRORCLR);
-		return;
-	}
-	
-	for (unsigned int i = 0; i < counter; i++)
+	for (unsigned int i = 2; i < (textLength + 2); i++)
 	{
 		storage = '\0';
 		for (char j = 0; j < 8; j++)
 		{
 			storage <<= 1;
-			storage = (char) (storage | (imageData[j + (i * 8)] & mask));
+			storage = (char) (storage | (this->imageData[j + (i * 8)] & mask));
 		}
 		tmpTextVector.push_back(storage);
 	}
 	
-	if (tmpTextVector[0] != STX)
-	{
-		LOG(myLog, 2, "Failed to find STX");
-		cryptLib::colorPrint("Failed to find STX", ERRORCLR);
-		return;
-	}
-	
-	std::copy(tmpTextVector.begin() + 1, tmpTextVector.end() - 1, std::back_inserter(this->inputText));
+	this->inputText.clear();
+	std::copy(tmpTextVector.begin(), tmpTextVector.end(), std::back_inserter(this->inputText));
 }
 
 void decrypt::decryptText()
@@ -198,7 +195,7 @@ void decrypt::setPasswd(std::vector <uint8_t> setTo)
 
 std::vector <uint8_t> decrypt::getData()
 {
-	return returnData;
+	return this->returnData;
 }
 
 // Protected
