@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 			
 			if ((cryptLib::vectorCompare(function, "Encrypt")) || (cryptLib::vectorCompare(function, "Decrypt")))
 			{
-				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator, keyPrivate_unsecure);
+				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator, keyPrivate_unsecure, &subscriber);
 			}
 			else if (cryptLib::vectorCompare(function, "Key"))
 			{

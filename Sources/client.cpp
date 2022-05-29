@@ -176,8 +176,6 @@ int main(int argc, char **argv)
 		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 		std::string uuid = msgStr.substr(26);
 		std::cout << "Assigned UUID:\n" << uuid << std::endl;
-		// Requesting encrypt/decrypt
-		cryptLib::colorPrint("Requesting encrypt / decrypt", WAITMSG);
 		// Loading & encrypting image & text & password
 		const Botan::BigInt n = 1000000000000000;
 		std::vector <uint8_t> tweak; // No tweak (salt)
@@ -230,56 +228,64 @@ int main(int argc, char **argv)
 		// RSA encryption on key for sending
 		Botan::PK_Encryptor_EME encKey(*publicKeyServer, rng, "EME-PKCS1-v1_5");
 		std::vector <uint8_t> encKey_t = encKey.encrypt(key, rng);
-		// Debug key hash
-		std::vector <uint8_t> keyToHash;
-		std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(keyToHash));
-		std::cout << "Key hash:\n";
-		cryptLib::generateHash(keyToHash);
-		// Sending prep
+		
+		cryptLib::colorPrint("Requesting encrypt / decrypt", WAITMSG);
+		
 		std::vector <uint8_t> messageToSend;
 		messageToSend.clear();
-		// Message prefix
+		
 		std::string tempString = "LennyIndustries|LIES_Server|";
 		tempString += encrypt ? "Encrypt" : "Decrypt";
-		tempString += "|UUID=";
+		tempString += "|";
+		
 		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
 		std::copy(uuid.begin(), uuid.end(), std::back_inserter(messageToSend));
-		tempString = ":KeyLength=" + std::to_string(encKey_t.size());
-		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-		tempString = ":Key=";
-		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-		std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(messageToSend));
-		if (!textVector.empty())
-		{
-			tempString = ":TextLength=" + std::to_string(textVector.size());
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			tempString = ":Text=";
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			std::copy(textVector.begin(), textVector.end(), std::back_inserter(messageToSend));
-		}
-		if (!imageVector.empty())
-		{
-			tempString = ":ImageLength=" + std::to_string(imageVector.size());
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			tempString = ":Image=";
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			std::copy(imageVector.begin(), imageVector.end(), std::back_inserter(messageToSend));
-		}
-		if (!passwd.empty())
-		{
-			tempString = ":PasswordLength=" + std::to_string(passwd.size());
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			tempString = ":Password=";
-			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-			std::copy(passwd.begin(), passwd.end(), std::back_inserter(messageToSend));
-		}
-		// Sending
+		
 		std::string subscribeTo = "LennyIndustries|LIES_Client_" + uuid + "|";
 		subscriber.set(zmq::sockopt::subscribe, subscribeTo);
-		ventilator.send(cryptLib::printableVector(messageToSend).c_str(), messageToSend.size());
-		subscriber.recv(msg);
-		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
-		std::string data = msgStr.substr(subscribeTo.length());
+		
+		std::string prefix = "LennyIndustries|LIES_Server_" + uuid + "|";
+		
+		std::string data;
+		
+		do
+		{
+			ventilator.send(cryptLib::printableVector(messageToSend).c_str(), messageToSend.size());
+			subscriber.recv(msg);
+			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
+			data = msgStr.substr(subscribeTo.length());
+			
+			messageToSend.clear();
+			
+			if (data == "Key?")
+			{
+				cryptLib::colorPrint("Key requested", WAITMSG);
+				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+				std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(messageToSend));
+			}
+			else if (data == "Text?")
+			{
+				cryptLib::colorPrint("Text requested", WAITMSG);
+				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+				std::copy(textVector.begin(), textVector.end(), std::back_inserter(messageToSend));
+			}
+			else if (data == "Image?")
+			{
+				cryptLib::colorPrint("Image requested", WAITMSG);
+				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+				std::copy(imageVector.begin(), imageVector.end(), std::back_inserter(messageToSend));
+			}
+			else if (data == "Passwd?")
+			{
+				cryptLib::colorPrint("Password requested", WAITMSG);
+				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+				std::copy(passwd.begin(), passwd.end(), std::back_inserter(messageToSend));
+			}
+			else
+			{
+				break;
+			}
+		} while (true);
 		// Decrypting
 		if (data != "ERROR_OCCURRED")
 		{

@@ -30,32 +30,20 @@ class connectionHandler
 {
 public:
 	// Con- Destructor
-	static connectionHandler *create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key);
+	static connectionHandler *create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec);
 	void kill();
 	// Getters / Setters
 	[[nodiscard]] Botan::UUID getUUID() const;
 protected:
 private:
 	// Con- Destructor
-	connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key);
+	connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec);
 	~connectionHandler();
 	// Functions
 	void handle();
-	bool messageSolver();
+	bool messageHandler();
 	
-	bool handleTextLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
-	bool handleText(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
-	
-	bool handleImageLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
-	bool handleImage(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
-	
-	bool handleKeyLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
-	bool handleKey(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
-	
-	bool handlePasswordLength(std::vector <uint8_t> &storage, size_t &equalsPosition);
-	bool handlePassword(std::vector <uint8_t> &storage, std::vector <uint8_t> &rest, size_t &equalsPosition);
-	
-	bool handleUuid(std::vector <uint8_t> &storage, size_t &equalsPosition);
+	void sendRequest(const std::string& request, std::vector <uint8_t> & putItHere);
 	
 	bool decryptKey();
 	void decryptData();
@@ -64,20 +52,20 @@ private:
 	void decryptCall();
 	// Variables
 	lilog *myLog;
+	
 	zmq::socket_t *myVent;
+	zmq::socket_t *myRec;
+	
 	std::string myKeyString;
 	
-	std::vector <uint8_t> function, message;
-	
+	std::vector <uint8_t> function, message, myPrefix, clientPrefix;
 	std::vector <uint8_t> messageCommand, messageArgument;
-	
-	int textLength, imageLength, keyLength, passwdLength;
 	std::vector <uint8_t> text, image, passwd, key;
 	
 	Botan::UUID uuid;
 	
 	bool error;
-//	bool encryptSetting;
+	
 	char options;
 };
 
