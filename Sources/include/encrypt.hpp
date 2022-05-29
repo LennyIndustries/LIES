@@ -25,10 +25,10 @@ public:
 	// Functions
 	void run();
 	// Getters / Setters
-	void setImage(std::vector <char> setTo);
-	void setText(std::vector <char> setTo);
-	void setPasswd(std::string setTo);
-	std::vector <char> getData();
+	void setImage(std::vector <uint8_t> setTo);
+	void setText(std::vector <uint8_t> setTo);
+	void setPasswd(std::vector <uint8_t> setTo);
+	std::vector <uint8_t> getData();
 protected:
 private:
 	// Functions
@@ -36,10 +36,9 @@ private:
 	void encryptText();
 	// Variables
 	lilog *myLog;
-	std::vector <char> inputText, inputImage, returnData;
-	std::string passwd;
+	std::vector <uint8_t> inputText, inputImage, returnData, passwd;
 	
-	std::vector <char> headerData, imageData;
+	std::vector <uint8_t> headerData, imageData;
 	
 	char runOption;
 	Botan::secure_vector<uint8_t> hash;

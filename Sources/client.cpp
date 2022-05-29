@@ -186,25 +186,30 @@ int main(int argc, char **argv)
 		std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
 		Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), passwd, tweak.data(), tweak.size(), 100000);
 		// Image
-		std::vector <char> imageVector;
+		std::vector <uint8_t> imageVector;
 		if (checkFile(myLog, imagePath, "bmp", false))
 		{
 			std::ifstream imageStream(imagePath, std::ios::binary);
-			imageVector = std::vector <char>(std::istreambuf_iterator <char>(imageStream), std::istreambuf_iterator <char>());
+			imageVector = std::vector <uint8_t>(std::istreambuf_iterator <char>(imageStream), std::istreambuf_iterator <char>());
 			imageStream.close();
 			
-//			encryption->set_key(key);
-//			Botan::secure_vector <uint8_t> dataVectorImage(imageVector.data(), imageVector.data() + imageVector.size());
-//			encryption->finish(dataVectorImage);
-//			imageVector.clear();
-//			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageVector));
+			encryption->set_key(key);
+			Botan::secure_vector <uint8_t> dataVectorImage(imageVector.data(), imageVector.data() + imageVector.size());
+			encryption->finish(dataVectorImage);
+			imageVector.clear();
+			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageVector));
+			// Debug image hash
+			std::vector <uint8_t> imageToHash;
+			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageToHash));
+			std::cout << "Image hash:\n";
+			cryptLib::generateHash(imageToHash);
 		}
 		// Text
-		std::vector <char> textVector;
+		std::vector <uint8_t> textVector;
 		if (checkFile(myLog, textPath, "txt", false))
 		{
 			std::ifstream textStream(textPath, std::ifstream::binary);
-			textVector = std::vector <char>(std::istreambuf_iterator <char>(textStream), std::istreambuf_iterator <char>());
+			textVector = std::vector <uint8_t>(std::istreambuf_iterator <char>(textStream), std::istreambuf_iterator <char>());
 			textStream.close();
 			
 			encryption->set_key(key);
@@ -225,8 +230,13 @@ int main(int argc, char **argv)
 		// RSA encryption on key for sending
 		Botan::PK_Encryptor_EME encKey(*publicKeyServer, rng, "EME-PKCS1-v1_5");
 		std::vector <uint8_t> encKey_t = encKey.encrypt(key, rng);
+		// Debug key hash
+		std::vector <uint8_t> keyToHash;
+		std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(keyToHash));
+		std::cout << "Key hash:\n";
+		cryptLib::generateHash(keyToHash);
 		// Sending prep
-		std::vector <char> messageToSend;
+		std::vector <uint8_t> messageToSend;
 		messageToSend.clear();
 		// Message prefix
 		std::string tempString = "LennyIndustries|LIES_Server|";
@@ -270,6 +280,17 @@ int main(int argc, char **argv)
 		subscriber.recv(msg);
 		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 		std::string data = msgStr.substr(subscribeTo.length());
+		// Decrypting
+		if (data != "ERROR_OCCURRED")
+		{
+			std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+			decFPE->set_key(key);
+			Botan::secure_vector <uint8_t> ptFPE(data.data(), data.data() + data.size());
+			decFPE->finish(ptFPE);
+			data.clear();
+			std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(data));
+		}
+		// Filtering
 		std::cout << "Received data:\n" << data << std::endl;
 		if (data[0] == 'B' && data[1] == 'M')
 		{
@@ -283,7 +304,7 @@ int main(int argc, char **argv)
 			if (passwd.empty() && ((imageVector.empty() && !textVector.empty()) || (textVector.empty() && !imageVector.empty() && encrypt)) && (data != "ERROR_OCCURRED"))
 			{
 				std::cout << "CRC32 to string\n";
-				std::vector <unsigned char> tmpVector;
+				std::vector <uint8_t> tmpVector;
 				std::copy(data.begin(), data.end(), std::back_inserter(tmpVector));
 				std::string tmpOutString = Botan::hex_encode(tmpVector);
 				std::cout << tmpOutString << std::endl;

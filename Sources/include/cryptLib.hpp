@@ -50,15 +50,15 @@ class cryptLib
 {
 public:
 	// Functions
-	static std::string printableVector(const std::vector <char> &vectorToPrint);
-	static std::size_t vectorFind(const std::vector <char> &searchVector, char searchChar);
-	static std::vector <char> subVector(const std::vector <char> &startVector, std::size_t startPos, std::size_t charCount = std::string::npos);
-	static bool vectorCompare(const std::vector <char> &vector, const std::string &string);
+	static std::string printableVector(const std::vector <uint8_t> &vectorToPrint);
+	static std::size_t vectorFind(const std::vector <uint8_t> &searchVector, char searchChar);
+	static std::vector <uint8_t> subVector(const std::vector <uint8_t> &startVector, std::size_t startPos, std::size_t charCount = std::string::npos);
+	static bool vectorCompare(const std::vector <uint8_t> &vector, const std::string &string);
 	static void colorPrint(const std::string &message, char color = 0x7);
+	static Botan::secure_vector<uint8_t> generateHash(std::vector <uint8_t> hashThis);
 protected:
 	// Functions
-	static void getImageData(std::vector <char> &image, std::vector <char> &headerReturn, std::vector <char> &dataReturn);
-	static Botan::secure_vector<uint8_t> generateHash(std::vector <char> hashThis);
+	static void getImageData(std::vector <uint8_t> &image, std::vector <uint8_t> &headerReturn, std::vector <uint8_t> &dataReturn);
 private:
 };
 

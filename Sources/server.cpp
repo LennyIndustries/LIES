@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 		auto *msg = new zmq::message_t();
 		std::string msgStr, subMsgStr;
 		std::size_t pos;
-		std::vector <char> messageVector, function, message;
+		std::vector <uint8_t> messageVector, function, message;
 //		unsigned int uuid;
 		while (subscriber.handle() != nullptr)
 		{
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 			messageVector.resize(msg->size());
 			std::memcpy(messageVector.data(), msg->data(), msg->size());
 			
-			std::vector <char> tmpVector(cryptLib::subVector(messageVector, strlen(MSG_PREFIX)));
+			std::vector <uint8_t> tmpVector(cryptLib::subVector(messageVector, strlen(MSG_PREFIX)));
 			pos = cryptLib::vectorFind(tmpVector, FILTER_CHAR);
 			
 			function.clear();

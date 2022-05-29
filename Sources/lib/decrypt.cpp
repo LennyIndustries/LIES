@@ -16,7 +16,7 @@ decrypt::decrypt(lilog *log)
 	this->inputText.clear();
 	this->inputImage.clear();
 	this->returnData.clear();
-	this->passwd = "";
+	this->passwd.clear();
 	this->runOption = 0;
 	this->hash.clear();
 	
@@ -99,17 +99,17 @@ void decrypt::decryptImage()
 		std::copy(this->headerData.begin() + 6, this->headerData.begin() + 10, std::back_inserter(this->hash));
 	}
 	// Getting text
-	std::vector <char> tmpTextVector;
+	std::vector <uint8_t> tmpTextVector;
 	unsigned int counter = 0;
 	unsigned char indexer = 0;
-	char storage = '\0';
+	unsigned char storage = '\0';
 	unsigned char mask = 0x01;
 	do
 	{
 		for (indexer = 0; indexer < 8; indexer++)
 		{
 			storage <<= 1;
-			storage = (char) (storage | (imageData[indexer + (counter * 8)] & mask));
+			storage = (storage | (imageData[indexer + (counter * 8)] & mask));
 		}
 		counter++;
 	} while ((storage != ETX) && ((indexer + (counter * 8)) <= maxChars));
@@ -166,7 +166,7 @@ void decrypt::decryptText()
 	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
 	// Decryption
 	std::unique_ptr <Botan::Cipher_Mode> decrypt = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(decrypt->maximum_keylength(), this->passwd, tweak.data(), tweak.size(), 100000);
+	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(decrypt->maximum_keylength(), cryptLib::printableVector(this->passwd), tweak.data(), tweak.size(), 100000);
 	decrypt->set_key(key);
 	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
 	decrypt->finish(dataVector);
@@ -175,22 +175,22 @@ void decrypt::decryptText()
 }
 
 // Getters / Setters
-void decrypt::setImage(std::vector <char> setTo)
+void decrypt::setImage(std::vector <uint8_t> setTo)
 {
 	this->inputImage = std::move(setTo);
 }
 
-void decrypt::setText(std::vector <char> setTo)
+void decrypt::setText(std::vector <uint8_t> setTo)
 {
 	this->inputText = std::move(setTo);
 }
 
-void decrypt::setPasswd(std::string setTo)
+void decrypt::setPasswd(std::vector <uint8_t> setTo)
 {
 	this->passwd = std::move(setTo);
 }
 
-std::vector <char> decrypt::getData()
+std::vector <uint8_t> decrypt::getData()
 {
 	return returnData;
 }

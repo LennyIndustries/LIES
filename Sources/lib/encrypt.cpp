@@ -16,7 +16,7 @@ encrypt::encrypt(lilog *log)
 	this->inputText.clear();
 	this->inputImage.clear();
 	this->returnData.clear();
-	this->passwd = "";
+	this->passwd.clear();
 	this->runOption = 0;
 	this->hash.clear();
 	
@@ -112,7 +112,7 @@ void encrypt::encryptImage()
 		return;
 	}
 	// Write the text to the image, prep
-	std::vector <char> textToWrite; // Vector with all the text and tags
+	std::vector <uint8_t> textToWrite; // Vector with all the text and tags
 	textToWrite.push_back(STX); // Start tag
 	std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(textToWrite)); // Text
 	textToWrite.push_back(ETX); // End tag
@@ -131,7 +131,7 @@ void encrypt::encryptImage()
 		}
 	}
 	// Setting hash in header
-	std::vector <unsigned char> tmpHash = Botan::unlock(this->hash);
+	std::vector <uint8_t> tmpHash = Botan::unlock(this->hash);
 	std::cout << "Inserting hash into header\n";
 	this->headerData[6] = tmpHash[0];
 	this->headerData[7] = tmpHash[1];
@@ -166,7 +166,7 @@ void encrypt::encryptText()
 	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
 	// Encryption
 	std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
-	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), this->passwd, tweak.data(), tweak.size(), 100000);
+	Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), cryptLib::printableVector(this->passwd), tweak.data(), tweak.size(), 100000);
 	encryption->set_key(key);
 	Botan::secure_vector <uint8_t> dataVector(this->inputText.data(), this->inputText.data() + this->inputText.size());
 	encryption->finish(dataVector);
@@ -175,26 +175,26 @@ void encrypt::encryptText()
 }
 
 // Getters / Setters
-void encrypt::setImage(std::vector <char> setTo)
+void encrypt::setImage(std::vector <uint8_t> setTo)
 {
 	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputImage));
 //	this->inputImage = std::move(setTo);
 }
 
-void encrypt::setText(std::vector <char> setTo)
+void encrypt::setText(std::vector <uint8_t> setTo)
 {
 	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputText));
 //	this->inputText = std::move(setTo);
 }
 
-void encrypt::setPasswd(std::string setTo)
+void encrypt::setPasswd(std::vector <uint8_t> setTo)
 {
 	this->passwd = std::move(setTo);
 }
 
-std::vector <char> encrypt::getData()
+std::vector <uint8_t> encrypt::getData()
 {
-	return returnData;
+	return this->returnData;
 }
 
 // Protected
