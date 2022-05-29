@@ -16,10 +16,6 @@
 #include "decrypt.hpp"
 #include "include/lilog.hpp"
 
-#include <cstring>
-#include <iostream>
-//#include <cstdlib>
-#include <vector>
 #include <iterator>
 #include <cmath>
 #include <zmq.hpp>

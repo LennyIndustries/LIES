@@ -14,7 +14,6 @@
 // Libraries
 #include "include/lilog.hpp"
 
-//#include <cstdio>
 #include <iostream>
 #include <cstring>
 #include <vector>
@@ -36,7 +35,6 @@
 #include <botan/cipher_mode.h>
 
 // Definitions
-#define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24
 #define STX 0x2 // STX (Start Of Text) :: 0000 0010 :: 2
 #define ETX 0x3 // ETX (End Of Text) :: 0000 0011 :: 3
 // Console colours

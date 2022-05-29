@@ -141,11 +141,6 @@ void encrypt::encryptImage()
 	this->inputImage.clear();
 	std::copy(this->headerData.begin(), this->headerData.end(), std::back_inserter(this->inputImage)); // Copy the header
 	std::copy(this->imageData.begin(), this->imageData.end(), std::back_inserter(this->inputImage)); // Copy the image
-	// Save image for testing
-//	std::ofstream image("outputImage.bmp", std::ios::out | std::ofstream::binary);
-//	std::copy(this->headerData.begin(), this->headerData.end(), std::ostreambuf_iterator <char>(image));
-//	std::copy(this->imageData.begin(), this->imageData.end(), std::ostreambuf_iterator <char>(image));
-//	image.close();
 }
 
 void encrypt::encryptText()
