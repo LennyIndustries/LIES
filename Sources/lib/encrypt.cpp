@@ -77,6 +77,15 @@ void encrypt::encryptImage()
 {
 	LOG(this->myLog, 1, "Encrypting text in image");
 	cryptLib::colorPrint("Encrypting text in image", WAITMSG);
+	std::string error = "ERROR";
+	// Text length
+	unsigned short int textLength = this->inputText.size();
+	if (textLength > MAX_CHARS)
+	{
+		error = "Too many characters";
+		this->inputImage.clear();
+		std::copy(error.begin(), error.end(), std::back_inserter(this->inputImage));
+	}
 	// Get image data
 	cryptLib::getImageData(this->inputImage, this->headerData, this->imageData);
 	// Get info from header
@@ -85,8 +94,8 @@ void encrypt::encryptImage()
 	int with = *(int *) &this->headerData[18];
 	int height = *(int *) &this->headerData[22];
 	int bitPerPixel = *(short int *) &this->headerData[28];
-	// with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS; / 8 = TOTAL BYTES; / 8 = MAX CHARS IN IMAGE (8 bytes per char)
-	int maxChars = ((with * height * bitPerPixel) / 8) / 8;
+	// with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS; / 8 = TOTAL BYTES; / 8 = MAX CHARS IN IMAGE (8 bytes per char) - 2 * 8 (text length)
+	int maxChars = (((with * height * bitPerPixel) / 8) / 8) - (2 * 8);
 	std::cout << "Reserved = " << reserved << std::endl;
 	std::cout << "With = " << with << std::endl;
 	std::cout << "Height = " << height << std::endl;
@@ -97,25 +106,38 @@ void encrypt::encryptImage()
 	{
 		LOG(this->myLog, 2, "Pixel depth is too low: %i", bitPerPixel);
 		cryptLib::colorPrint("Pixel depth is too low", ERRORCLR);
+		error = "Pixel depth is too low";
+		this->inputImage.clear();
+		std::copy(error.begin(), error.end(), std::back_inserter(this->inputImage));
 		return;
 	}
 	if (this->inputText.size() > maxChars) // The total amount of characters in the text can not be put in the image
 	{
-		LOG(this->myLog, 2, "Character count too high: %i > %i", this->inputText.size(), maxChars);
-		cryptLib::colorPrint("Character count too high", ERRORCLR);
+		LOG(this->myLog, 2, "(Encrypted) Character count too high: %i > %i", this->inputText.size(), maxChars);
+		cryptLib::colorPrint("(Encrypted) Character count too high", ERRORCLR);
+		error = "(Encrypted) Character count too high";
+		this->inputImage.clear();
+		std::copy(error.begin(), error.end(), std::back_inserter(this->inputImage));
 		return;
 	}
 	if (reserved != 0) // The image has already been encrypted. We put the text hash in here
 	{
 		LOG(this->myLog, 2, "Image already encrypted or incompatible");
 		cryptLib::colorPrint("Image already encrypted or incompatible", ERRORCLR);
+		error = "Image already encrypted or incompatible";
+		this->inputImage.clear();
+		std::copy(error.begin(), error.end(), std::back_inserter(this->inputImage));
 		return;
 	}
 	// Write the text to the image, prep
-	std::vector <uint8_t> textToWrite; // Vector with all the text and tags
-	textToWrite.push_back(STX); // Start tag
+	std::vector <uint8_t> textToWrite; // Vector with all the text and size
+	std::string textLengthString = std::to_string(textLength); // Text size
+	if (textLengthString.length() == 1)
+	{
+		textLengthString = "0" + textLengthString;
+	}
+	std::copy(textLengthString.begin(), textLengthString.end(), std::back_inserter(textToWrite));
 	std::copy(this->inputText.begin(), this->inputText.end(), std::back_inserter(textToWrite)); // Text
-	textToWrite.push_back(ETX); // End tag
 	// Variables
 	unsigned char mask = 0x80;
 	unsigned char storageText = 0x00;
@@ -173,13 +195,11 @@ void encrypt::encryptText()
 void encrypt::setImage(std::vector <uint8_t> setTo)
 {
 	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputImage));
-//	this->inputImage = std::move(setTo);
 }
 
 void encrypt::setText(std::vector <uint8_t> setTo)
 {
 	std::copy(setTo.begin(), setTo.end(), std::back_inserter(this->inputText));
-//	this->inputText = std::move(setTo);
 }
 
 void encrypt::setPasswd(std::vector <uint8_t> setTo)

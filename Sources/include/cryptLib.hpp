@@ -35,8 +35,6 @@
 #include <botan/cipher_mode.h>
 
 // Definitions
-#define STX 0x2 // STX (Start Of Text) :: 0000 0010 :: 2
-#define ETX 0x3 // ETX (End Of Text) :: 0000 0011 :: 3
 // Console colours
 #define DEFAULTCLR 0xe
 #define ERRORCLR 0xc
@@ -53,7 +51,7 @@ public:
 	static std::vector <uint8_t> subVector(const std::vector <uint8_t> &startVector, std::size_t startPos, std::size_t charCount = std::string::npos);
 	static bool vectorCompare(const std::vector <uint8_t> &vector, const std::string &string);
 	static void colorPrint(const std::string &message, char color = 0x7);
-	static Botan::secure_vector<uint8_t> generateHash(std::vector <uint8_t> hashThis);
+	static Botan::secure_vector<uint8_t> generateHash(const std::vector <uint8_t>& hashThis);
 protected:
 	// Functions
 	static void getImageData(std::vector <uint8_t> &image, std::vector <uint8_t> &headerReturn, std::vector <uint8_t> &dataReturn);

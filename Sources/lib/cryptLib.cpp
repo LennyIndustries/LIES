@@ -11,7 +11,7 @@
 std::string cryptLib::printableVector(const std::vector <uint8_t> &vectorToPrint)
 {
 	std::string returnString;
-	for (char i: vectorToPrint)
+	for (unsigned char i: vectorToPrint)
 	{
 		returnString += i;
 	}
@@ -69,7 +69,7 @@ void cryptLib::colorPrint(const std::string &message, char color)
 	SetConsoleTextAttribute(hConsole, DEFAULTCLR);
 }
 
-Botan::secure_vector<uint8_t> cryptLib::generateHash(std::vector <uint8_t> hashThis)
+Botan::secure_vector<uint8_t> cryptLib::generateHash(const std::vector <uint8_t>& hashThis)
 {
 	Botan::secure_vector<uint8_t> returnHash;
 	std::unique_ptr <Botan::HashFunction> crc32(Botan::HashFunction::create("CRC32"));

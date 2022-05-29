@@ -15,6 +15,7 @@
 #include "cryptLib.hpp"
 
 // Definitions
+#define MAX_CHARS 8190 // 8190 chars takes up 65520 bytes, to write to total in the image only 2 bytes are used
 
 class encrypt : private cryptLib
 {
