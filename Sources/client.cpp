@@ -31,12 +31,6 @@
 #define ERR_2 2 // Key error
 #define ERR_3 3 // Input error
 
-// Structs
-//struct fileCheck
-//{
-//	unsigned int b : 3;
-//};
-
 // Functions
 bool checkFile(lilog *myLog, const std::string &checkThis, const std::string &extension, bool exist);
 
@@ -177,7 +171,6 @@ int main(int argc, char **argv)
 		std::string uuid = msgStr.substr(26);
 		std::cout << "Assigned UUID:\n" << uuid << std::endl;
 		// Loading & encrypting image & text & password
-		const Botan::BigInt n = 1000000000000000;
 		std::vector <uint8_t> tweak; // No tweak (salt)
 		tweak.clear();
 		std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
@@ -196,12 +189,9 @@ int main(int argc, char **argv)
 			encryption->finish(dataVectorImage);
 			imageVector.clear();
 			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageVector));
-			// Debug image hash
-			std::vector <uint8_t> imageToHash;
-			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageToHash));
-			std::cout << "Image hash:\n";
-			cryptLib::generateHash(imageToHash);
 		}
+		else
+			cryptLib::colorPrint("No image file provided", ERRORCLR);
 		// Text
 		std::vector <uint8_t> textVector;
 		if (checkFile(myLog, textPath, "txt", false))
@@ -216,6 +206,8 @@ int main(int argc, char **argv)
 			textVector.clear();
 			std::copy(dataVectorText.begin(), dataVectorText.end(), std::back_inserter(textVector));
 		}
+		else
+			cryptLib::colorPrint("No text file provided", ERRORCLR);
 		// Password
 		if (!passwd.empty())
 		{
@@ -225,6 +217,8 @@ int main(int argc, char **argv)
 			passwd.clear();
 			std::copy(dataVectorPasswd.begin(), dataVectorPasswd.end(), std::back_inserter(passwd));
 		}
+		else
+			cryptLib::colorPrint("No password provided", ERRORCLR);
 		// RSA encryption on key for sending
 		Botan::PK_Encryptor_EME encKey(*publicKeyServer, rng, "EME-PKCS1-v1_5");
 		std::vector <uint8_t> encKey_t = encKey.encrypt(key, rng);
