@@ -142,10 +142,10 @@ void decrypt::decryptImage()
 	std::copy(tmpTextVector.begin() + 1, tmpTextVector.end() - 1, std::back_inserter(this->inputText));
 	
 	// Save text for testing
-	std::cout << "Saving text for debug" << std::endl;
-	std::ofstream text("outputImage.txt", std::ios::out | std::ofstream::trunc);
-	std::copy(this->inputText.begin(), this->inputText.end(), std::ostreambuf_iterator <char>(text));
-	text.close();
+//	std::cout << "Saving text for debug" << std::endl;
+//	std::ofstream text("outputImage.txt", std::ios::out | std::ofstream::trunc);
+//	std::copy(this->inputText.begin(), this->inputText.end(), std::ostreambuf_iterator <char>(text));
+//	text.close();
 }
 
 void decrypt::decryptText()
@@ -160,7 +160,7 @@ void decrypt::decryptText()
 	tweak.clear();
 	if (!this->hash.empty()) // If there is a hash
 	{
-		std::cout << "Beware, here be hashes" << std::endl;
+		std::cout << "Adding salt" << std::endl;
 		tweak = Botan::unlock(this->hash);
 	}
 	std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));

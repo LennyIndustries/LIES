@@ -16,9 +16,9 @@ Client
 -encrypt -text TestFile_Small.txt -internet -log LIES.log                                         : CRC32 of text, Text
 -encrypt -image TestImage10x10.bmp -internet -log LIES.log                                        : CRC32 of image, Text
 
--decrypt -image outputImage.bmp -passwd test -internet -log LIES.log                              : Full decryption, Text
--decrypt -image outputImage.bmp -internet -log LIES.log                                           : Partial decryption, Text
--decrypt -text outputImage.txt -passwd test -internet -log LIES.log                               : Decryption of text only, Text; NOTE: Does not work
+-decrypt -image LIES_output.bmp -passwd test -internet -log LIES.log                              : Full decryption, Text
+-decrypt -image LIES_output.bmp -internet -log LIES.log                                           : Partial decryption, Text
+-decrypt -text LIES_output.txt -passwd test -internet -log LIES.log                               : Decryption of text only, Text
 -decrypt -text TestFile_Small.txt -internet -log LIES.log                                         : CRC32 of text, Text
 
 Server
