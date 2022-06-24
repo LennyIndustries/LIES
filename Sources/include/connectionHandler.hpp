@@ -19,6 +19,8 @@
 #include <iterator>
 #include <cmath>
 #include <zmq.hpp>
+#include <thread>
+#include <chrono>
 
 // Definitions
 
@@ -26,14 +28,14 @@ class connectionHandler
 {
 public:
 	// Con- Destructor
-	static connectionHandler *create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec);
+	static connectionHandler *create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, std::string key, std::string ip);
 	void kill();
 	// Getters / Setters
 	[[nodiscard]] Botan::UUID getUUID() const;
 protected:
 private:
 	// Con- Destructor
-	connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec);
+	connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, std::string key, std::string ip);
 	~connectionHandler();
 	// Functions
 	void handle();
@@ -49,8 +51,8 @@ private:
 	// Variables
 	lilog *myLog;
 	
-	zmq::socket_t *myVent;
-	zmq::socket_t *myRec;
+	zmq::socket_t *myVentilator;
+	zmq::socket_t *mySubscriber;
 	
 	std::string myKeyString;
 	

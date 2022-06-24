@@ -116,6 +116,7 @@ int main(int argc, char **argv)
 	std::cout << "Keys:\n" << keyPrivate_unsecure << keyPublic_unsecure;
 	
 	// Connecting benternet
+	std::string ip;
 	try
 	{
 		zmq::context_t context(1);
@@ -129,6 +130,7 @@ int main(int argc, char **argv)
 			cryptLib::colorPrint(std::string() + "Connecting to: " + LOCALHOST("0"), MSGCLR);
 			subscriber.connect(LOCALHOST("24042"));
 			ventilator.connect(LOCALHOST("24041"));
+			ip = LOCALHOST("");
 		}
 		else if (myInputHandler.cmdOptionExists("-local"))
 		{
@@ -136,6 +138,7 @@ int main(int argc, char **argv)
 			cryptLib::colorPrint(std::string() + "Connecting to: " + LOCAL("0"), MSGCLR);
 			subscriber.connect(LOCAL("24042"));
 			ventilator.connect(LOCAL("24041"));
+			ip = LOCAL("");
 		}
 		else if (myInputHandler.cmdOptionExists("-internet"))
 		{
@@ -143,6 +146,7 @@ int main(int argc, char **argv)
 			cryptLib::colorPrint(std::string() + "Connecting to: " + INTERNET("0"), MSGCLR);
 			subscriber.connect(INTERNET("24042"));
 			ventilator.connect(INTERNET("24041"));
+			ip = INTERNET("");
 		}
 		else
 		{
@@ -198,9 +202,11 @@ int main(int argc, char **argv)
 			
 			if ((cryptLib::vectorCompare(function, "Encrypt")) || (cryptLib::vectorCompare(function, "Decrypt")))
 			{
+//				subscriber.set(zmq::sockopt::unsubscribe, MSG_PREFIX);
 				cryptLib::colorPrint("UUID: " + cryptLib::printableVector(message), ALTMSGCLR);
 				usedUUIDs.emplace_back(Botan::UUID(cryptLib::printableVector(message)));
-				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator, keyPrivate_unsecure, &subscriber);
+				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, keyPrivate_unsecure, ip);
+//				subscriber.set(zmq::sockopt::subscribe, MSG_PREFIX);
 			}
 			else if (cryptLib::vectorCompare(function, "Key"))
 			{

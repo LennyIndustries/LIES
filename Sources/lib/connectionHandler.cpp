@@ -12,34 +12,43 @@
 #include "include/connectionHandler.hpp"
 
 // Constructor (Private)
-connectionHandler::connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec)
+connectionHandler::connectionHandler(std::vector <uint8_t> &function, const std::vector <uint8_t> &message, lilog *log, std::string key, std::string ip)
 {
 	// Passed values
 	this->function = function;
 	this->message = message;
 	this->myLog = log;
-	this->myVent = vent; // New
-	this->myRec = rec; // New
+//	this->myVentilator = vent; // New
+//	this->mySubscriber = rec; // New
 	this->myKeyString = std::move(key);
 	// Default values
 	this->error = false;
 	this->options = 0;
 	
+	zmq::context_t context(2);
+	this->myVentilator = new zmq::socket_t(context, ZMQ_PUSH);
+	this->mySubscriber = new zmq::socket_t(context, ZMQ_SUB);
+	
+	this->myVentilator->connect((ip + "24041"));
+	this->mySubscriber->connect((ip + "24042"));
+	
 	LOG(this->myLog, 1, "Calling handle");
-	handle(); // To threat
+	std::thread *t = new std::thread(&connectionHandler::handle, this);
+//	t.join();
+	//handle(); // To threat
 }
 
 // Public
 // "Constructor"
-connectionHandler *connectionHandler::create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, zmq::socket_t *vent, std::string key, zmq::socket_t *rec)
+connectionHandler *connectionHandler::create(std::vector <uint8_t> &function, std::vector <uint8_t> &message, lilog *log, std::string key, std::string ip)
 {
-	return new connectionHandler(function, message, log, vent, std::move(key), rec);
+	return new connectionHandler(function, message, log, std::move(key), ip);
 }
 
 // "Destructor"
 void connectionHandler::kill()
 {
-	delete this;
+//	delete this;
 }
 
 Botan::UUID connectionHandler::getUUID() const
@@ -52,6 +61,9 @@ Botan::UUID connectionHandler::getUUID() const
 void connectionHandler::handle()
 {
 	LOG(this->myLog, 1, "Calling messageHandler");
+	cryptLib::colorPrint("5 sec timeout", ALTMSGCLR);
+	std::chrono::seconds timeout(5);
+	std::this_thread::sleep_for(timeout);
 	// If this fails there is no hope
 	if (!messageHandler())
 	{
@@ -131,7 +143,7 @@ void connectionHandler::handle()
 		std::string message = "LennyIndustries|LIES_Client_" + this->uuid.to_string() + "|ERROR_OCCURRED";
 		LOG(this->myLog, 2, "Sending error message back");
 		cryptLib::colorPrint("Sending error message back", ERRORCLR);
-		this->myVent->send(message.c_str(), message.length());
+		this->myVentilator->send(message.c_str(), message.length());
 		this->kill();
 	}
 	else if (cryptLib::vectorCompare(this->function, "Encrypt"))
@@ -178,7 +190,7 @@ bool connectionHandler::messageHandler()
 		prefix = "LennyIndustries|LIES_Server_" + this->uuid.to_string() + "|";
 		std::copy(prefix.begin(), prefix.end(), std::back_inserter(this->myPrefix));
 	}
-	this->myRec->set(zmq::sockopt::subscribe, cryptLib::printableVector(this->myPrefix));
+	this->mySubscriber->set(zmq::sockopt::subscribe, cryptLib::printableVector(this->myPrefix));
 	// Requesting key
 	cryptLib::colorPrint("Requesting key", WAITMSG);
 	this->key.clear();
@@ -211,8 +223,8 @@ void connectionHandler::sendRequest(const std::string& request, std::vector <uin
 {
 	std::string sendString = cryptLib::printableVector(this->clientPrefix) + request;
 	auto *msg = new zmq::message_t();
-	this->myVent->send(sendString.c_str(), sendString.size());
-	this->myRec->recv(msg);
+	this->myVentilator->send(sendString.c_str(), sendString.size());
+	this->mySubscriber->recv(msg);
 	std::vector <uint8_t> returnVector;
 	std::string msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 	std::string msgStrSub = msgStr.substr(this->myPrefix.size());
@@ -335,7 +347,7 @@ void connectionHandler::encryptCall()
 	// Sending
 	LOG(this->myLog, 1, "Sending data back");
 	cryptLib::colorPrint("Sending data back", ALTMSGCLR);
-	this->myVent->send(cryptLib::printableVector(sendVector).c_str(), sendVector.size());
+	this->myVentilator->send(cryptLib::printableVector(sendVector).c_str(), sendVector.size());
 }
 
 void connectionHandler::decryptCall()
@@ -375,8 +387,12 @@ void connectionHandler::decryptCall()
 	std::copy(returnVector.begin(), returnVector.end(), std::back_inserter(sendVector)); // Copy data
 	LOG(this->myLog, 1, "Sending text back");
 	cryptLib::colorPrint("Sending text back", ALTMSGCLR);
-	this->myVent->send(cryptLib::printableVector(sendVector).c_str(), sendVector.size());
+	this->myVentilator->send(cryptLib::printableVector(sendVector).c_str(), sendVector.size());
 }
 
 // Destructor (Private)
-connectionHandler::~connectionHandler() = default;
+connectionHandler::~connectionHandler()
+{
+	this->myVentilator->close();
+	this->mySubscriber->close();
+}
