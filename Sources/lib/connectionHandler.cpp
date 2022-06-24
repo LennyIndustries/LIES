@@ -18,15 +18,15 @@ connectionHandler::connectionHandler(std::vector <uint8_t> &function, const std:
 	this->function = function;
 	this->message = message;
 	this->myLog = log;
-	this->myVent = vent;
-	this->myRec = rec;
+	this->myVent = vent; // New
+	this->myRec = rec; // New
 	this->myKeyString = std::move(key);
 	// Default values
 	this->error = false;
 	this->options = 0;
 	
 	LOG(this->myLog, 1, "Calling handle");
-	handle();
+	handle(); // To threat
 }
 
 // Public

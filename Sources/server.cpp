@@ -25,6 +25,7 @@
 
 #include <cstdio>
 #include <zmq.hpp>
+#include <list>
 
 // Definitions
 #define LOCALHOST(port) "tcp://localhost:" port
@@ -163,6 +164,7 @@ int main(int argc, char **argv)
 		std::size_t pos;
 		std::vector <uint8_t> messageVector, function, message;
 //		unsigned int uuid;
+		std::list<Botan::UUID> usedUUIDs;
 		while (subscriber.handle() != nullptr)
 		{
 			subscriber.recv(msg);
@@ -196,6 +198,8 @@ int main(int argc, char **argv)
 			
 			if ((cryptLib::vectorCompare(function, "Encrypt")) || (cryptLib::vectorCompare(function, "Decrypt")))
 			{
+				cryptLib::colorPrint("UUID: " + cryptLib::printableVector(message), ALTMSGCLR);
+				usedUUIDs.emplace_back(Botan::UUID(cryptLib::printableVector(message)));
 				auto *myConnectionHandler = connectionHandler::create(function, message, myLog, &ventilator, keyPrivate_unsecure, &subscriber);
 			}
 			else if (cryptLib::vectorCompare(function, "Key"))
@@ -221,6 +225,28 @@ int main(int argc, char **argv)
 				LOG(myLog, 1, "Sending UUID back: %s", uuid.to_string().c_str());
 				cryptLib::colorPrint("Sending UUID back", ALTMSGCLR);
 				ventilator.send(returnString.c_str(), returnString.length());
+			}
+			else if (cryptLib::vectorCompare(function, "UUIDs"))
+			{
+				// Send used UUIDs back
+				cryptLib::colorPrint("Sending used UUIDs back", ALTMSGCLR);
+				std::string sendString = "LennyIndustries|LIES_UUIDs|";
+				for (auto & usedUUID : usedUUIDs)
+				{
+					std::cout << usedUUID.to_string() << std::endl;
+					sendString += usedUUID.to_string();
+					sendString += '\n';
+				}
+				if (sendString == "LennyIndustries|LIES_UUIDs|")
+				{
+					sendString += "No used UUIDs yet";
+				}
+				else
+				{
+					sendString.erase(sendString.length() - 1); // Remove last new line
+				}
+				//std::cout << sendString << std::endl; // Debug
+				ventilator.send(sendString.c_str(), sendString.length());
 			}
 			else if (cryptLib::vectorCompare(function, "Ping"))
 			{

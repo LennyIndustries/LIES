@@ -10,6 +10,9 @@
  * The client checks the input given and sends it to the server to process.
  */
 
+// -decrypt -image LIES_output.bmp -passwd test -internet -log LIES_Client.log
+// -uuids -internet -log LIES_Client.log
+
 // Libraries
 #include "include/lilog.hpp"
 #include "include/inputHandler.hpp"
@@ -80,12 +83,13 @@ int main(int argc, char **argv)
 	std::string textPath = myInputHandler.getCmdOption("-text");
 	std::string passwd = myInputHandler.getCmdOption("-passwd");
 	int encrypt = myInputHandler.cmdOptionExists("-encrypt") ? 1 : (myInputHandler.cmdOptionExists("-decrypt") ? 0 : -1);
+	int requestUUIDs = myInputHandler.cmdOptionExists("-uuids") ? 1 : 0;
 	
 	// Checking inputs
-	if (encrypt == -1)
+	if ((encrypt == -1) && (requestUUIDs == 0))
 	{
-		LOG(myLog, 3, "Failed to get encrypt/decrypt command");
-		cryptLib::colorPrint("What do you want to do\nYou did not specify whether to encrypt or decrypt\nAborting", ERRORCLR);
+		LOG(myLog, 3, "Failed to get encrypt/decrypt/uuids command");
+		cryptLib::colorPrint("What do you want to do\nYou did not specify whether to encrypt, decrypt or request used uuids\nAborting", ERRORCLR);
 		myLog->kill();
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleTextAttribute(hConsole, 0x7);
@@ -132,190 +136,204 @@ int main(int argc, char **argv)
 		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
 		std::cout << "Response" << std::endl;
 		// Requesting key
-		cryptLib::colorPrint("Requesting public key", WAITMSG);
-		subscriber.set(zmq::sockopt::subscribe, "LennyIndustries|LIES_Key|");
-		ventilator.send("LennyIndustries|LIES_Server|Key", 31);
-		subscriber.recv(msg);
-		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
-		std::string serverPublicKey = msgStr.substr(25);
-		std::cout << "Server key:\n" << serverPublicKey;
-		// Setting up key
-		cryptLib::colorPrint("Setting up server key", WAITMSG);
-		Botan::AutoSeeded_RNG rng;
-		Botan::DataSource_Memory DSMPublicServer(serverPublicKey);
-		Botan::X509_PublicKey *X509Key_publicServer;
-		try
+		if (!requestUUIDs)
 		{
-			X509Key_publicServer = Botan::X509::load_key(DSMPublicServer);
-			
-			if (!X509Key_publicServer->check_key(rng, true))
-			{
-				cryptLib::colorPrint("Server key failed check", ERRORCLR);
-				delete X509Key_publicServer;
-				throw std::invalid_argument("Server key is invalid");
-			}
-		}
-		catch (const std::exception &e)
-		{
-			LOG(myLog, 2, e.what());
-			cryptLib::colorPrint(e.what(), ERRORCLR);
-			return ERR_2;
-		}
-		std::unique_ptr <Botan::Public_Key> publicKeyServer(X509Key_publicServer);
-		// Requesting UUID
-		cryptLib::colorPrint("Requesting UUID", WAITMSG);
-		subscriber.set(zmq::sockopt::subscribe, "LennyIndustries|LIES_UUID|");
-		ventilator.send("LennyIndustries|LIES_Server|UUID", 32);
-		subscriber.recv(msg);
-		msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
-		std::string uuid = msgStr.substr(26);
-		std::cout << "Assigned UUID:\n" << uuid << std::endl;
-		// Loading & encrypting image & text & password
-		std::vector <uint8_t> tweak; // No tweak (salt)
-		tweak.clear();
-		std::unique_ptr <Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
-		std::unique_ptr <Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
-		Botan::secure_vector <uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), passwd, tweak.data(), tweak.size(), 100000);
-		// Image
-		std::vector <uint8_t> imageVector;
-		if (checkFile(myLog, imagePath, "bmp", false))
-		{
-			std::ifstream imageStream(imagePath, std::ios::binary);
-			imageVector = std::vector <uint8_t>(std::istreambuf_iterator <char>(imageStream), std::istreambuf_iterator <char>());
-			imageStream.close();
-			
-			encryption->set_key(key);
-			Botan::secure_vector <uint8_t> dataVectorImage(imageVector.data(), imageVector.data() + imageVector.size());
-			encryption->finish(dataVectorImage);
-			imageVector.clear();
-			std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageVector));
-		}
-		else
-			cryptLib::colorPrint("No image file provided", ERRORCLR);
-		// Text
-		std::vector <uint8_t> textVector;
-		if (checkFile(myLog, textPath, "txt", false))
-		{
-			std::ifstream textStream(textPath, std::ifstream::binary);
-			textVector = std::vector <uint8_t>(std::istreambuf_iterator <char>(textStream), std::istreambuf_iterator <char>());
-			textStream.close();
-			
-			encryption->set_key(key);
-			Botan::secure_vector <uint8_t> dataVectorText(textVector.data(), textVector.data() + textVector.size());
-			encryption->finish(dataVectorText);
-			textVector.clear();
-			std::copy(dataVectorText.begin(), dataVectorText.end(), std::back_inserter(textVector));
-		}
-		else
-			cryptLib::colorPrint("No text file provided", ERRORCLR);
-		// Password
-		if (!passwd.empty())
-		{
-			encryption->set_key(key);
-			Botan::secure_vector <uint8_t> dataVectorPasswd(passwd.data(), passwd.data() + passwd.size());
-			encryption->finish(dataVectorPasswd);
-			passwd.clear();
-			std::copy(dataVectorPasswd.begin(), dataVectorPasswd.end(), std::back_inserter(passwd));
-		}
-		else
-			cryptLib::colorPrint("No password provided", ERRORCLR);
-		// RSA encryption on key for sending
-		Botan::PK_Encryptor_EME encKey(*publicKeyServer, rng, "EME-PKCS1-v1_5");
-		std::vector <uint8_t> encKey_t = encKey.encrypt(key, rng);
-		
-		cryptLib::colorPrint("Requesting encrypt / decrypt", WAITMSG);
-		
-		std::vector <uint8_t> messageToSend;
-		messageToSend.clear();
-		
-		std::string tempString = "LennyIndustries|LIES_Server|";
-		tempString += encrypt ? "Encrypt" : "Decrypt";
-		tempString += "|";
-		
-		std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
-		std::copy(uuid.begin(), uuid.end(), std::back_inserter(messageToSend));
-		
-		std::string subscribeTo = "LennyIndustries|LIES_Client_" + uuid + "|";
-		subscriber.set(zmq::sockopt::subscribe, subscribeTo);
-		
-		std::string prefix = "LennyIndustries|LIES_Server_" + uuid + "|";
-		
-		std::string data;
-		
-		do
-		{
-			ventilator.send(cryptLib::printableVector(messageToSend).c_str(), messageToSend.size());
+			cryptLib::colorPrint("Requesting public key", WAITMSG);
+			subscriber.set(zmq::sockopt::subscribe, "LennyIndustries|LIES_Key|");
+			ventilator.send("LennyIndustries|LIES_Server|Key", 31);
 			subscriber.recv(msg);
 			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
-			data = msgStr.substr(subscribeTo.length());
+			std::string serverPublicKey = msgStr.substr(25);
+			std::cout << "Server key:\n" << serverPublicKey;
+			// Setting up key
+			cryptLib::colorPrint("Setting up server key", WAITMSG);
+			Botan::AutoSeeded_RNG rng;
+			Botan::DataSource_Memory DSMPublicServer(serverPublicKey);
+			Botan::X509_PublicKey *X509Key_publicServer;
+			try
+			{
+				X509Key_publicServer = Botan::X509::load_key(DSMPublicServer);
+				
+				if (!X509Key_publicServer->check_key(rng, true))
+				{
+					cryptLib::colorPrint("Server key failed check", ERRORCLR);
+					delete X509Key_publicServer;
+					throw std::invalid_argument("Server key is invalid");
+				}
+			}
+			catch (const std::exception &e)
+			{
+				LOG(myLog, 2, e.what());
+				cryptLib::colorPrint(e.what(), ERRORCLR);
+				return ERR_2;
+			}
+			std::unique_ptr<Botan::Public_Key> publicKeyServer(X509Key_publicServer);
+			// Requesting UUID
+			cryptLib::colorPrint("Requesting UUID", WAITMSG);
+			subscriber.set(zmq::sockopt::subscribe, "LennyIndustries|LIES_UUID|");
+			ventilator.send("LennyIndustries|LIES_Server|UUID", 32);
+			subscriber.recv(msg);
+			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
+			std::string uuid = msgStr.substr(26);
+			std::cout << "Assigned UUID:\n" << uuid << std::endl;
+			// Loading & encrypting image & text & password
+			std::vector<uint8_t> tweak; // No tweak (salt)
+			tweak.clear();
+			std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
+			std::unique_ptr<Botan::Cipher_Mode> encryption = Botan::Cipher_Mode::create("AES-256/SIV", Botan::ENCRYPTION);
+			Botan::secure_vector<uint8_t> key = pbkdf->pbkdf_iterations(encryption->maximum_keylength(), passwd, tweak.data(), tweak.size(), 100000);
+			// Image
+			std::vector<uint8_t> imageVector;
+			if (checkFile(myLog, imagePath, "bmp", false))
+			{
+				std::ifstream imageStream(imagePath, std::ios::binary);
+				imageVector = std::vector<uint8_t>(std::istreambuf_iterator<char>(imageStream), std::istreambuf_iterator<char>());
+				imageStream.close();
+				
+				encryption->set_key(key);
+				Botan::secure_vector<uint8_t> dataVectorImage(imageVector.data(), imageVector.data() + imageVector.size());
+				encryption->finish(dataVectorImage);
+				imageVector.clear();
+				std::copy(dataVectorImage.begin(), dataVectorImage.end(), std::back_inserter(imageVector));
+			}
+			else
+				cryptLib::colorPrint("No image file provided", ERRORCLR);
+			// Text
+			std::vector<uint8_t> textVector;
+			if (checkFile(myLog, textPath, "txt", false))
+			{
+				std::ifstream textStream(textPath, std::ifstream::binary);
+				textVector = std::vector<uint8_t>(std::istreambuf_iterator<char>(textStream), std::istreambuf_iterator<char>());
+				textStream.close();
+				
+				encryption->set_key(key);
+				Botan::secure_vector<uint8_t> dataVectorText(textVector.data(), textVector.data() + textVector.size());
+				encryption->finish(dataVectorText);
+				textVector.clear();
+				std::copy(dataVectorText.begin(), dataVectorText.end(), std::back_inserter(textVector));
+			}
+			else
+				cryptLib::colorPrint("No text file provided", ERRORCLR);
+			// Password
+			if (!passwd.empty())
+			{
+				encryption->set_key(key);
+				Botan::secure_vector<uint8_t> dataVectorPasswd(passwd.data(), passwd.data() + passwd.size());
+				encryption->finish(dataVectorPasswd);
+				passwd.clear();
+				std::copy(dataVectorPasswd.begin(), dataVectorPasswd.end(), std::back_inserter(passwd));
+			}
+			else
+				cryptLib::colorPrint("No password provided", ERRORCLR);
+			// RSA encryption on key for sending
+			Botan::PK_Encryptor_EME encKey(*publicKeyServer, rng, "EME-PKCS1-v1_5");
+			std::vector<uint8_t> encKey_t = encKey.encrypt(key, rng);
 			
+			cryptLib::colorPrint("Requesting encrypt / decrypt", WAITMSG);
+			
+			std::vector<uint8_t> messageToSend;
 			messageToSend.clear();
 			
-			if (data == "Key?")
+			std::string tempString = "LennyIndustries|LIES_Server|";
+			tempString += encrypt ? "Encrypt" : "Decrypt";
+			tempString += "|";
+			
+			std::copy(tempString.begin(), tempString.end(), std::back_inserter(messageToSend));
+			std::copy(uuid.begin(), uuid.end(), std::back_inserter(messageToSend));
+			
+			std::string subscribeTo = "LennyIndustries|LIES_Client_" + uuid + "|";
+			subscriber.set(zmq::sockopt::subscribe, subscribeTo);
+			
+			std::string prefix = "LennyIndustries|LIES_Server_" + uuid + "|";
+			
+			std::string data;
+			
+			do
 			{
-				cryptLib::colorPrint("Key requested", WAITMSG);
-				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
-				std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(messageToSend));
+				ventilator.send(cryptLib::printableVector(messageToSend).c_str(), messageToSend.size());
+				subscriber.recv(msg);
+				msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
+				data = msgStr.substr(subscribeTo.length());
+				
+				messageToSend.clear();
+				
+				if (data == "Key?")
+				{
+					cryptLib::colorPrint("Key requested", WAITMSG);
+					std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+					std::copy(encKey_t.begin(), encKey_t.end(), std::back_inserter(messageToSend));
+				}
+				else if (data == "Text?")
+				{
+					cryptLib::colorPrint("Text requested", WAITMSG);
+					std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+					std::copy(textVector.begin(), textVector.end(), std::back_inserter(messageToSend));
+				}
+				else if (data == "Image?")
+				{
+					cryptLib::colorPrint("Image requested", WAITMSG);
+					std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+					std::copy(imageVector.begin(), imageVector.end(), std::back_inserter(messageToSend));
+				}
+				else if (data == "Passwd?")
+				{
+					cryptLib::colorPrint("Password requested", WAITMSG);
+					std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
+					std::copy(passwd.begin(), passwd.end(), std::back_inserter(messageToSend));
+				}
+				else
+				{
+					break;
+				}
+			} while (true);
+			// Decrypting
+			if (data != "ERROR_OCCURRED")
+			{
+				std::unique_ptr<Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
+				decFPE->set_key(key);
+				Botan::secure_vector<uint8_t> ptFPE(data.data(), data.data() + data.size());
+				decFPE->finish(ptFPE);
+				data.clear();
+				std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(data));
 			}
-			else if (data == "Text?")
+			// Filtering
+			if (data[0] == 'B' && data[1] == 'M')
 			{
-				cryptLib::colorPrint("Text requested", WAITMSG);
-				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
-				std::copy(textVector.begin(), textVector.end(), std::back_inserter(messageToSend));
-			}
-			else if (data == "Image?")
-			{
-				cryptLib::colorPrint("Image requested", WAITMSG);
-				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
-				std::copy(imageVector.begin(), imageVector.end(), std::back_inserter(messageToSend));
-			}
-			else if (data == "Passwd?")
-			{
-				cryptLib::colorPrint("Password requested", WAITMSG);
-				std::copy(prefix.begin(), prefix.end(), std::back_inserter(messageToSend));
-				std::copy(passwd.begin(), passwd.end(), std::back_inserter(messageToSend));
+				std::ofstream output("LIES_output.bmp", std::ios::out | std::ofstream::trunc | std::ofstream::binary);
+				std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output));
+				output.close();
 			}
 			else
 			{
-				break;
+				std::cout << "Received data:\n" << data << std::endl;
+				std::ofstream output("LIES_output.txt", std::ios::out | std::ofstream::trunc);
+				if (passwd.empty() && ((imageVector.empty() && !textVector.empty()) || (textVector.empty() && !imageVector.empty() && encrypt)) && (data != "ERROR_OCCURRED"))
+				{
+					std::cout << "CRC32 to string\n";
+					std::vector<uint8_t> tmpVector;
+					std::copy(data.begin(), data.end(), std::back_inserter(tmpVector));
+					std::string tmpOutString = Botan::hex_encode(tmpVector);
+					std::cout << tmpOutString << std::endl;
+					data.clear();
+					std::copy(tmpOutString.begin(), tmpOutString.end(), std::back_inserter(data));
+				}
+				data.erase(std::remove(data.begin(), data.end(), '\n'), data.end()); // Voodoo, https://stackoverflow.com/questions/1488775/c-remove-new-line-from-multiline-string
+				std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output));
+				output.close();
 			}
-		} while (true);
-		// Decrypting
-		if (data != "ERROR_OCCURRED")
-		{
-			std::unique_ptr <Botan::Cipher_Mode> decFPE = Botan::Cipher_Mode::create("AES-256/SIV", Botan::DECRYPTION);
-			decFPE->set_key(key);
-			Botan::secure_vector <uint8_t> ptFPE(data.data(), data.data() + data.size());
-			decFPE->finish(ptFPE);
-			data.clear();
-			std::copy(ptFPE.begin(), ptFPE.end(), std::back_inserter(data));
-		}
-		// Filtering
-		if (data[0] == 'B' && data[1] == 'M')
-		{
-			std::ofstream output("LIES_output.bmp", std::ios::out | std::ofstream::trunc | std::ofstream::binary);
-			std::copy(data.begin(), data.end(), std::ostreambuf_iterator <char>(output));
-			output.close();
+			cryptLib::colorPrint("Done", ALTMSGCLR);
 		}
 		else
 		{
-			std::cout << "Received data:\n" << data << std::endl;
-			std::ofstream output("LIES_output.txt", std::ios::out | std::ofstream::trunc);
-			if (passwd.empty() && ((imageVector.empty() && !textVector.empty()) || (textVector.empty() && !imageVector.empty() && encrypt)) && (data != "ERROR_OCCURRED"))
-			{
-				std::cout << "CRC32 to string\n";
-				std::vector <uint8_t> tmpVector;
-				std::copy(data.begin(), data.end(), std::back_inserter(tmpVector));
-				std::string tmpOutString = Botan::hex_encode(tmpVector);
-				std::cout << tmpOutString << std::endl;
-				data.clear();
-				std::copy(tmpOutString.begin(), tmpOutString.end(), std::back_inserter(data));
-			}
-			data.erase(std::remove(data.begin(), data.end(), '\n'), data.end()); // Voodoo, https://stackoverflow.com/questions/1488775/c-remove-new-line-from-multiline-string
-			std::copy(data.begin(), data.end(), std::ostreambuf_iterator <char>(output));
-			output.close();
+			cryptLib::colorPrint("Requesting used UUIDs", WAITMSG);
+			subscriber.set(zmq::sockopt::subscribe, "LennyIndustries|LIES_UUIDs|");
+			ventilator.send("LennyIndustries|LIES_Server|UUIDs", 33);
+			subscriber.recv(msg);
+			msgStr = std::string(static_cast<char *>(msg->data()), msg->size());
+			std::string uuids = msgStr.substr(27);
+			std::cout << "UUIDs:\n" << uuids << std::endl;
+			cryptLib::colorPrint("Done", ALTMSGCLR);
 		}
-		cryptLib::colorPrint("Done", ALTMSGCLR);
 	}
 	catch (const std::exception &e)
 	{
